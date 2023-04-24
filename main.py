@@ -1,5 +1,5 @@
-from mpl_toolkits.mplot3d import *
-from mpl_toolkits.mplot3d import axes3d
+#from mpl_toolkits.mplot3d import *
+#from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
@@ -104,9 +104,9 @@ print('rec_times:', rec_times)
 fig = plt.figure()
 ax = fig.add_subplot(1, 2, 1, projection='3d')
 max_width = max(tx_square_side, rx_square_side) / 3
-ax.set_zlim((max_width * -1, max_width))
-ax.set_ylim((max_width * -1, max_width))
-ax.set_xlim((max_width * -1, max_width))
+zlim = ax.set_zlim((max_width * -1, max_width))
+ylim = ax.set_ylim((max_width * -1, max_width))
+xlim = ax.set_xlim((max_width * -1, max_width))
 ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
 ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
 ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
@@ -152,7 +152,6 @@ if plot_trilateration_tx:
             plot_trilateration_tx_plot = ax.plot_surface(
                 X1, Y1, Z1, rstride=1, cstride=1, cmap=cm.coolwarm,
                 linewidth=0, antialiased=False, alpha=0.3)
-            return plot_trilateration_tx_plot
 
         def plot_towers():
             for k in range(towers.shape[0]):
@@ -177,7 +176,7 @@ if plot_trilateration_tx:
         TDOA5_ann = ax.text(0, 30e3, 2e3, 'TDOA5 ')
         TDOA6_ann = ax.text(0, 30e3, 1e3, 'TDOA6 ')
         v_vec = ax.quiver(tx[0], tx[1] + 1e3, tx[2], 0, 1, 0,
-                          length=2500, normalize=True, fc='k', ec='k')
+                         length=2500, normalize=True, fc='k', ec='k')
 
         v_ann = ax.text3D(tx[0], tx[1] + 1e3, tx[2], 'v = {:.0E} m/s'.format(v))
 
@@ -195,17 +194,21 @@ if plot_trilateration_tx:
         TDOA6 = 0
 
         def animate(i):
-            global t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann,TDOA_dist1,TDOA_dist2,TDOA_dist3,TDOA_dist4,TDOA_dist5,TDOA_dist6
+            global t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann,TDOA_dist1,\
+                TDOA_dist2,TDOA_dist3,TDOA_dist4,TDOA_dist5,TDOA_dist6
 
             t = i / n_frames * max_seconds
             Radius = v * t
+
             v_vec.remove()
             ax.collections.clear()
+
             v_vec = ax.quiver(tx[0], tx[1] + Radius, tx[2], 0, 1, 0,
-                              length=2500, normalize=True, fc='k', ec='k')
+                                  length=2500, normalize=True, fc='k', ec='k')
+
             v_ann.set_position((tx[0] - 0.5e3, tx[1] + 1.5e3 + Radius))
             plot_towers()
-            pp = plot_tx(radius=Radius)
+            plot_tx(radius=Radius)
 
             cur_time.set_text('t = {:.2E} s'.format(t))
             if t >= rec_times[0] and t0_rec == 0:
@@ -245,7 +248,7 @@ if plot_trilateration_tx:
                 TDOA_dist6 = v * TDOA6
                 TDOA6_ann.set_text(TDOA6_ann.get_text() + 't2-t2 =' + '{:.2E} s'.format(TDOA6))
 
-        anim = FuncAnimation(fig, animate, frames=n_frames, interval=16.6, blit=False)
+        anim = FuncAnimation(fig, animate,frames=n_frames, interval=16.6, blit=False)
         # anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
         # plt.close()
         # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
@@ -393,7 +396,7 @@ if plot_trilateration_spheresIntersection_circles:
                 array_1d = np.array(Zahl)
                 coordinats_12 = array_2d + array_1d[:, np.newaxis]
                 plot_circle_1 = ax.plot(
-                    coordinats_12[0], coordinats_12[1], coordinats_12[2])
+                    coordinats_12[0], coordinats_12[1], coordinats_12[2], color="g")
             else:
                 plot_circle_1 = []
 
@@ -496,8 +499,8 @@ if plot_trilateration_spheresIntersection_circles:
         r0_ann = ax.text(1e3, 30e3, 23e3, 'Tower 0 radius r0 = ')
         r1_ann = ax.text(1e3, 30e3, 21e3, 'Tower 1 radius r1 = ')
 
-        n_frames = 10
-        max_d = 1e8
+        n_frames = 1000
+        max_d = 1e6
 
         def animate(i):
 
@@ -512,13 +515,11 @@ if plot_trilateration_spheresIntersection_circles:
             r3 = np.clip(d, i / n_frames * max_d, r[2])
 
             ax.collections.clear()
-            ax.clear()
-
             plot_towers()
 
             kugel1 = Kugeln(radius=d0, x=x0[0], y=y0[0], z=z0[0])
             kugel1.coordinaten()
-            kugel2 = Kugeln(radius=d1 + TDOA_dist1, x=x0[1], y=y0[1], z=z0[1])
+            kugel2 = Kugeln(radius=d1, x=x0[1], y=y0[1], z=z0[1])
             kugel2.coordinaten()
 
             # kugel1(r1=d0)
@@ -526,7 +527,7 @@ if plot_trilateration_spheresIntersection_circles:
             # kugel3(r3=d2 + TDOA_dist2)
             # kugel4(r4=d3 + TDOA_dist3)
 
-            # circle12(radius=r1 + TDOA_dist1)
+            circle12(radius=r1)
             # circle13(radius=r1 + TDOA_dist2)
             # circle14(radius=r1 + TDOA_dist3)
             # circle23(radius=r2 + TDOA_dist6)
