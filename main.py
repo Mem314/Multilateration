@@ -395,11 +395,10 @@ if plot_trilateration_spheresIntersection_circles:
                 Zahl = [x0[0], y0[0], z0[0]]
                 array_1d = np.array(Zahl)
                 coordinats_12 = array_2d + array_1d[:, np.newaxis]
-                plot_circle_1 = ax.plot(
+                plot_circle_1 = ax.plot3D(
                     coordinats_12[0], coordinats_12[1], coordinats_12[2], color="g")
             else:
                 plot_circle_1 = []
-
         def circle13(radius):
             if np.sqrt(e ** 2 + f ** 2 + n ** 2) <= (r[0] + r[2]):
                 X13 = (r[0] ** 2 - r[2] ** 2 + e ** 2 + f ** 2 + n ** 2) / (
@@ -494,17 +493,15 @@ if plot_trilateration_spheresIntersection_circles:
                 ax.scatter3D(x, y, z, color="b", s=10)
                 ax.scatter3D(tx[0], tx[1], tx[2], color="g", s=10)
 
-        # Annotations, to be updated during animation
-        cur_d_ann = ax.text(1e3, 30e3, 25e3, 'd = 0')
-        r0_ann = ax.text(1e3, 30e3, 23e3, 'Tower 0 radius r0 = ')
-        r1_ann = ax.text(1e3, 30e3, 21e3, 'Tower 1 radius r1 = ')
 
-        n_frames = 1000
-        max_d = 1e6
+
+        n_frames = 100
+        max_d = 1e5
 
         def animate(i):
+            global TDOA_dist1, TDOA_dist2, TDOA_dist3, TDOA_dist4, TDOA_dist5, TDOA_dist6
 
-            d = i / n_frames * max_d
+            d = np.sqrt(i) / n_frames * max_d
             d0 = np.clip(d, i / n_frames * max_d, distances[0])
             d1 = np.clip(d, i / n_frames * max_d, distances[1])
             d2 = np.clip(d, i / n_frames * max_d, distances[2])
@@ -514,7 +511,18 @@ if plot_trilateration_spheresIntersection_circles:
             r2 = np.clip(d, i / n_frames * max_d, r[1])
             r3 = np.clip(d, i / n_frames * max_d, r[2])
 
+            ax.clear()
             ax.collections.clear()
+
+            max_width = max(tx_square_side, rx_square_side) / 3
+            ax.set_zlim((max_width * -1, max_width))
+            ax.set_ylim((max_width * -1, max_width))
+            ax.set_xlim((max_width * -1, max_width))
+            ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
+            ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
+            ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
+
+
             plot_towers()
 
             kugel1 = Kugeln(radius=d0, x=x0[0], y=y0[0], z=z0[0])
@@ -525,7 +533,7 @@ if plot_trilateration_spheresIntersection_circles:
             # kugel1(r1=d0)
             # kugel2(r2=d1 + TDOA_dist1)
             # kugel3(r3=d2 + TDOA_dist2)
-            # kugel4(r4=d3 + TDOA_dist3)
+            # kugel4(r4=d3 + TDOA_dist3
 
             circle12(radius=r1)
             # circle13(radius=r1 + TDOA_dist2)
@@ -534,23 +542,21 @@ if plot_trilateration_spheresIntersection_circles:
             # circle24(radius=r2 + TDOA_dist4)
             # circle34(radius=r3 + TDOA_dist5)
 
-            max_width = max(tx_square_side, rx_square_side) / 3
-            ax.set_zlim((max_width * -1, max_width))
-            ax.set_ylim((max_width * -1, max_width))
-            ax.set_xlim((max_width * -1, max_width))
-            ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
-            ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
-            ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
 
+            # Annotations, to be updated during animation
+            cur_d_ann = ax.text(1e3, 30e3, 25e3, 'd = 0')
+            r0_ann = ax.text(1e3, 30e3, 23e3, 'Tower 0 radius r0 = ')
+            r1_ann = ax.text(1e3, 30e3, 21e3, 'Tower 1 radius r1 = ')
             cur_d_ann.set_text('d = {:.2E} m'.format(d))
             r0_ann.set_text('Tower 0 radius r0 = {:.2E} m'.format(d0))
             r1_ann.set_text('Tower 1 radius r1 = {:.2E} m'.format(d1 + TDOA_dist1))
             r1_ann.set_text('Tower 1 radius r1 = {:.2E} m'.format(d2 + TDOA_dist2))
             r1_ann.set_text('Tower 1 radius r1 = {:.2E} m'.format(d3 + TDOA_dist3))
 
-        anim = FuncAnimation(fig, animate, frames=n_frames, interval=16, blit=False)
+        anim = FuncAnimation(fig, animate, frames=60, interval=16, blit=False)
         # anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-        # plt.close()
+        #anim.save('/home/soeren/Animations/TDOA.gif', writer='imagemagick', fps=60)
+        #plt.close()
         # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
         plt.show()
         return anim
