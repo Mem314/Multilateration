@@ -1,0 +1,94 @@
+import matplotlib.pyplot as plt
+import matplotlib.tri
+from matplotlib import cm
+import numpy as np
+import random
+import sympy as sy
+import math
+from trilateration import sphereCircle, Trilateration_3D
+from matplotlib.animation import FuncAnimation
+
+The_Sierpinski_Triangle = True
+length = 30
+
+fig = plt.figure()
+ax = fig.add_subplot()
+max_width = max(0, length)
+ax.set_ylim((0, max_width))
+ax.set_xlim((0, max_width))
+#ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
+#ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
+
+class Points:
+    def __init__(self, x, y, color):
+        self.x = x
+        self.y = y
+        self.color = color
+
+    def coord(self):
+        return self.x, self.y
+    def plot_points(self):
+        plot = plt.plot(self.x, self.y, marker=".", color=self.color)
+        return plot
+
+p =  length
+point_1 = Points(1,1, "red")
+point_2 = Points(p-1,1, "red")
+point_3 = Points(p/2, p-1, "red")
+point_1.plot_points()
+point_2.plot_points()
+point_3.plot_points()
+
+num_points = 10000
+a = p-1  # upper bound
+b = 1    # lower bound
+
+#first_point = ((np.random.rand(num_points, 2)) * (b-a)) + a
+
+def first_point(p1, p2, p3):
+    """
+    Random first point on the triangle with vertices p1, p2 and p3.
+    """
+    x, y = sorted([random.random(), random.random()])
+    s, t, u = x, y - x, 1 - y
+    return (s * p1[0] + t * p2[0] + u * p3[0],
+            s * p1[1] + t * p2[1] + u * p3[1])
+p1 = (point_1.x, point_1.y)
+p2 = (point_2.x, point_2.y)
+p3 = (point_3.x, point_3.y)
+point = [first_point(p1, p2, p3) for _ in range(1)]
+e1, e2 = zip(*point)
+#plt.scatter(e1, e2, s=1)
+
+
+if The_Sierpinski_Triangle:
+    def distance(t1, t2):
+        return math.sqrt((t1[0] - t2[0])**2 + (t1[1] - t2[1])**2)
+
+    distance(point[0], random.choice((point_1.coord(), point_2.coord(), point_3.coord()))) / 2
+
+    def middle_point(t1, t2):
+        x = (t1[0] + t2[0])/2
+        y = (t1[1] + t2[1])/2
+        return list(np.append(x, y))
+
+    # start point
+    random_eck_point_0 = random.choice((point_1.coord(), point_2.coord(), point_3.coord()))
+    x0 = middle_point(point[0], random_eck_point_0)[0]
+    y0 = middle_point(point[0], random_eck_point_0)[1]
+
+    xi, yi = [], []
+    xi.append(x0)
+    yi.append(y0)
+    for i in range(1, num_points):
+        # the other points
+        random_eck_point_i = random.choice((point_1.coord(), point_2.coord(), point_3.coord()))
+        x = middle_point((xi[i-1], yi[i-1]), random_eck_point_i)[0]
+        xi.append(x)
+        y = middle_point((xi[i-1], yi[i-1]), random_eck_point_i)[1]
+        yi.append(y)
+    plt.scatter(xi, yi, s=0.1)
+
+plt.show()
+
+
