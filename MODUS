@@ -39,7 +39,7 @@ point_1.plot_points()
 point_2.plot_points()
 point_3.plot_points()
 
-num_points = np.array(range(1, 10000))
+num_points = np.array(range(1, 1000))
 
 a = p-1  # upper bound
 b = 1    # lower bound
@@ -73,6 +73,8 @@ if The_Sierpinski_Triangle:
         y = (t1[1] + t2[1])/2
         return list(np.append(x, y))
 
+
+    num_points_ann = ax.text(15,32, 'number of points = 0')
     # start point
     random_eck_point_0 = random.choice((point_1.coord(), point_2.coord(), point_3.coord()))
     x0 = middle_point(point[0], random_eck_point_0)[0]
@@ -83,7 +85,7 @@ if The_Sierpinski_Triangle:
     n_frames = num_points
 
     def animate(j):
-        global n_frames
+        global n_frames,num_points_ann
 
         ax.collections.clear()
 
@@ -95,9 +97,10 @@ if The_Sierpinski_Triangle:
         yi.append(y)
         plt.scatter(xi, yi, s=2,c='#1f77b4')
 
-    anim = FuncAnimation(fig, animate, frames=n_frames, interval=1, blit=True)
+        num_points_ann.set_text('number of points = {:} '.format(j))
+    anim = FuncAnimation(fig, animate, frames=n_frames, interval=1, blit=False, repeat=False)
     #anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    anim.save('/home/soeren/Animations/The_Sierpinski_Triangle.gif', writer='imagemagick', fps=60)
+    #anim.save('/home/soeren/Animations/The_Sierpinski_Triangle.gif', writer='imagemagick', fps=60)
     # plt.close()
     # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
 
