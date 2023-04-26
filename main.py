@@ -502,6 +502,7 @@ if plot_trilateration_spheresIntersection_circles:
         def animate(i):
 
             d = i / n_frames * max_d
+            print(d)
             d0 = np.clip(d, i / n_frames * max_d, distances[0])
             d1 = np.clip(d, i / n_frames * max_d, distances[1])
             d2 = np.clip(d, i / n_frames * max_d, distances[2])
