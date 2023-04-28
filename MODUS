@@ -39,7 +39,7 @@ point_1.plot_points()
 point_2.plot_points()
 point_3.plot_points()
 
-num_points = np.array(range(1, 1000))
+num_points = np.array(range(1, 500))
 
 a = p-1  # upper bound
 b = 1    # lower bound
@@ -74,7 +74,8 @@ if The_Sierpinski_Triangle:
         return list(np.append(x, y))
 
 
-    num_points_ann = ax.text(15,32, 'number of points = 0')
+    num_points_ann = ax.text(15, 32, 'number of points = 0')
+
     # start point
     random_eck_point_0 = random.choice((point_1.coord(), point_2.coord(), point_3.coord()))
     x0 = middle_point(point[0], random_eck_point_0)[0]
@@ -82,6 +83,7 @@ if The_Sierpinski_Triangle:
     xi, yi = [], []
     xi.append(x0)
     yi.append(y0)
+
     n_frames = num_points
 
     def animate(j):
@@ -92,10 +94,11 @@ if The_Sierpinski_Triangle:
         # the other points
         random_eck_point_i = random.choice((point_1.coord(), point_2.coord(), point_3.coord()))
         x = middle_point((xi[j - 1], yi[j - 1]), random_eck_point_i)[0]
-        xi.append(x)
+        xi .append(x)
+
         y = middle_point((xi[j - 1], yi[j - 1]), random_eck_point_i)[1]
-        yi.append(y)
-        plt.scatter(xi, yi, s=2,c='#1f77b4')
+        yi .append(y)
+        plt.scatter(xi, yi, s=2, c='#1f77b4')
 
         num_points_ann.set_text('number of points = {:} '.format(j))
     anim = FuncAnimation(fig, animate, frames=n_frames, interval=1, blit=False, repeat=False)
