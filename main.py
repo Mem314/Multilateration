@@ -103,15 +103,7 @@ print('rec_times:', rec_times)
 """
 
 # Plot towers and transmission location.
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection='3d')
-max_width = max(tx_square_side, rx_square_side) / 2
-ax.set_zlim((max_width * -1, max_width))
-ax.set_ylim((max_width * -1, max_width))
-ax.set_xlim((max_width * -1, max_width))
-ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
-ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
-ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
+
 
 x0, y0, z0 = [], [], []
 for i in range(0, len(towers)):
@@ -125,6 +117,18 @@ for i in range(0, len(distances)):
 
 
 if plot_trilateration_spheresIntersection_circles:
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    max_width = max(tx_square_side, rx_square_side) / 2
+    ax.set_zlim((max_width * -1, max_width))
+    ax.set_ylim((max_width * -1, max_width))
+    ax.set_xlim((max_width * -1, max_width))
+    ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
+    ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
+    ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
+    plt.axis('off')
+
     for i in range(num_towers):
         if plot_lines_to_tx:
             # line between transmitter and tx
@@ -349,15 +353,7 @@ if plot_trilateration_spheresIntersection_circles:
     t1 = ax.text(0, 30e3, 20e3, 'Tower 1 received at t = ')
     t2 = ax.text(0, 30e3, 17e3, 'Tower 2 received at t = ')
     t3 = ax.text(0, 30e3, 14e3, 'Tower 3 received at t = ')
-    #TDOA1_ann = ax.text(0, 30e3, 11e3, 'TDOA1 ')
-    #TDOA2_ann = ax.text(0, 30e3, 8e3, 'TDOA2 ')
-    #TDOA3_ann = ax.text(0, 30e3, 5e3, 'TDOA3 ')
-    #TDOA4_ann = ax.text(0, 30e3, 3e3, 'TDOA4 ')
-    #TDOA5_ann = ax.text(0, 30e3, 2e3, 'TDOA5 ')
-    #TDOA6_ann = ax.text(0, 30e3, 1e3, 'TDOA6 ')
-    #cur_d_ann = ax.text(1e3, 30e3, 25e3, 'd = 0')
-    #r0_ann = ax.text(1e3, 30e3, 23e3, 'Tower 0 radius r0 = ')
-    #r1_ann = ax.text(1e3, 30e3, 21e3, 'Tower 1 radius r1 = ')
+
     v_vec = ax.quiver(tx[0], tx[1] + 1e3, tx[2], 0, 1, 0,
                       length=2500, normalize=True, fc='k', ec='k')
     v_ann = ax.text3D(tx[0], tx[1] + 1e3, tx[2], 'v = {:.0E} m/s'.format(v))
@@ -374,21 +370,18 @@ if plot_trilateration_spheresIntersection_circles:
 
     n_frames = 30
     max_seconds = 1e-4
-    max_d = 1e4
-    factor = 1.3
+    max_d = 1e5
 
     def animate1(i):
-        global factor, t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann, TDOA_dist1, \
+        global  t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann, TDOA_dist1, \
             TDOA_dist2, TDOA_dist3, TDOA_dist4, TDOA_dist5, TDOA_dist6
 
-        plot_towers()
-
-        t = i / n_frames  * max_seconds
+        t = i / n_frames * max_seconds
         Radius = v * t
 
         ax.collections.clear()
 
-        #v_vec.remove()
+        plot_towers()
         v_vec = ax.quiver(tx[0], tx[1] + Radius, tx[2], 0, 1, 0,
                           length=2500, normalize=True, fc='k', ec='k')
         v_ann.set_position((tx[0] - 0.5e3, tx[1] + 1.5e3 + Radius))
@@ -432,16 +425,10 @@ if plot_trilateration_spheresIntersection_circles:
             TDOA_dist6 = v * TDOA6
             #TDOA6_ann.set_text(TDOA6_ann.get_text() + 't2-t2 =' + '{:.2E} s'.format(TDOA6))
 
-    anim1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
-    # anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    # plt.close()
-    # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
-    plt.show()
-    def animate2(i):
-        global factor, t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann, TDOA_dist1, \
-            TDOA_dist2, TDOA_dist3, TDOA_dist4, TDOA_dist5, TDOA_dist6
 
-        plot_towers()
+    def animate2(i):
+        global t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann, TDOA_dist1, \
+            TDOA_dist2, TDOA_dist3, TDOA_dist4, TDOA_dist5, TDOA_dist6
 
         d = i / n_frames * max_d
 
@@ -449,8 +436,15 @@ if plot_trilateration_spheresIntersection_circles:
         d1 = np.clip(d, i / n_frames * max_d, distances[1])
         d2 = np.clip(d, i / n_frames * max_d, distances[2])
         d3 = np.clip(d, i / n_frames * max_d, distances[3])
-
+        ax.clear()
         ax.collections.clear()
+        max_width = max(tx_square_side, rx_square_side) / 2
+        ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
+        ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
+        ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
+        plt.axis('off')
+
+        plot_towers()
 
         r1 = np.clip(d, i / n_frames * max_d, r[0])
         r2 = np.clip(d, i / n_frames * max_d, r[1])
@@ -473,11 +467,23 @@ if plot_trilateration_spheresIntersection_circles:
         print("\r Tower 2 radius r2 = : " + str(d2 + TDOA_dist2), end="")
         print("\r Tower 3 radius r3 = : " + str(d3 + TDOA_dist3), end="")
 
-    anim2 = FuncAnimation(fig, animate2, frames=n_frames, interval=1, blit=False, repeat=False)
+
+
+    anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
     # anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
     # plt.close()
     # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
     plt.show()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    plt.axis('off')
+    anim_2 = FuncAnimation(fig, animate2,frames=n_frames, interval=1, blit=False, repeat=False)
+    # anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
+    # plt.close()
+    # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
+    plt.show()
+
 
 
 

@@ -102,7 +102,7 @@ if The_Sierpinski_Triangle:
 
         num_points_ann.set_text('number of points = {:} '.format(j))
     anim = FuncAnimation(fig, animate, frames=n_frames, interval=1, blit=False, repeat=False)
-    #anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
+    #anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/The_Sierpinski_Triangle.gif', writer='imagemagick', fps=60)
     #anim.save('/home/soeren/Animations/The_Sierpinski_Triangle.gif', writer='imagemagick', fps=60)
     # plt.close()
     # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
