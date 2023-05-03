@@ -197,6 +197,7 @@ if plot_trilateration_spheresIntersection_circles:
         ax.plot_surface(
             X2, Y2, Z2, rstride=1, cstride=2, cmap=cm.coolwarm,
             linewidth=0, antialiased=False, alpha=0.2)
+
     d = x0[1] - x0[0]
     g = y0[1] - y0[0]
     h = z0[1] - z0[0]
@@ -355,22 +356,18 @@ if plot_trilateration_spheresIntersection_circles:
         text = ax.text(0, 30e3, -i * k + l, 'Tower {} received at t = '.format(i))
         tower_text.append(text)
 
-    v_vec = ax.quiver(tx[0], tx[1] + 1e3, tx[2], 0, 1, 0,
-                      length=2500, normalize=True, fc='k', ec='k')
-    v_ann = ax.text3D(tx[0], tx[1] + 1e3, tx[2], 'v = {:.0E} m/s'.format(v))
+    v_vec = ax.quiver(tx[0] + 1e3, tx[1], tx[2], 1, 0, 0,
+                      length=10000, normalize=False, fc='k', ec='k')
+    v_ann = ax.text3D(tx[0] + 4e3, tx[1]  + 4e3, tx[2], 'v = {} m/s'.format(v))
     t_rec = 0
-    TDOA1 = abs(rec_times[1] - rec_times[0])
-    TDOA2 = abs(rec_times[2] - rec_times[0])
-    TDOA3 = abs(rec_times[3] - rec_times[0])
-    TDOA4 = abs(rec_times[3] - rec_times[1])
-    TDOA5 = abs(rec_times[3] - rec_times[2])
-    TDOA6 = abs(rec_times[2] - rec_times[1])
-    TDOA1_dist = v * TDOA1
-    TDOA2_dist = v * TDOA2
-    TDOA3_dist = v * TDOA3
-    TDOA4_dist = v * TDOA4
-    TDOA5_dist = v * TDOA5
-    TDOA6_dist = v * TDOA6
+
+    TDOA = []
+    TDOA_dist = []
+    for i in range(num_towers):
+        for j in range(i + 1, num_towers):
+            tdoa = abs(rec_times[j] - rec_times[i])
+            TDOA.append(tdoa)
+            TDOA_dist.append(v * tdoa)
 
     n_frames = 10
     max_seconds = 1e-4
@@ -383,13 +380,10 @@ if plot_trilateration_spheresIntersection_circles:
         Radius = v * t
 
         ax.collections.clear()
-        ax.xaxis.set_visible(False)
-        ax.yaxis.set_visible(False)
-        ax.zaxis.set_visible(False)
         plot_towers()
-        v_vec = ax.quiver(tx[0], tx[1] + Radius, tx[2], 0, 1, 0,
-                          length=2500, normalize=True, fc='k', ec='k')
-        v_ann.set_position((tx[0] - 0.5e3, tx[1] + 1.5e3 + Radius))
+        v_vec = ax.quiver(tx[0] + Radius, tx[1], tx[2], 1, 0, 0,
+                          length=10000, normalize=True, fc='k', ec='k')
+        v_ann.set_position((tx[0] + 4e3 + Radius, tx[1] + 4e3))
 
         plot_tx(radius=Radius)
         cur_time.set_text('t = {:.2E} s'.format(t))
