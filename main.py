@@ -64,13 +64,13 @@ plot_trilateration_spheresIntersection_circles = True
 # between every pair of towers. This is useful for visualising the
 # hyperbolic loci focal points.
 plot_lines_between_towers = False
-plot_lines_to_tx = False
+plot_lines_to_tx = True
 
 # Generate towers with x and y coordinates.
 # for tower i: x, y = towers[i][0], towers[i][1]
 towersss = (np.random.rand(num_towers, 3) - 0.5) * rx_square_side
 array_2dd = np.array(towersss)
-zahl1 = [1, 1, 1, 1]
+zahl1 = np.repeat(1, num_towers)
 array_1dd = np.array(zahl1)
 towerss = array_2dd * array_1dd[:, np.newaxis]
 zahl = [1, 1, 0]
@@ -106,42 +106,44 @@ print('rec_times:', rec_times)
 
 
 x0, y0, z0 = [], [], []
-for i in range(0, len(towers)):
+for i in range(towers.shape[0]):
     x0.__iadd__([towers[i][0]])
     y0.__iadd__([towers[i][1]])
     z0.__iadd__([towers[i][2]])
 
 r = []
-for i in range(0, len(distances)):
+for i in range(towers.shape[0]):
     r.__iadd__([distances[i]])
 
 
 if plot_trilateration_spheresIntersection_circles:
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(14,8))
     ax = fig.add_subplot(projection='3d')
+    fig.subplots_adjust(left=0.2, right=0.8)
     max_width = max(tx_square_side, rx_square_side) / 2
-    ax.set_zlim((max_width * -1, max_width))
-    ax.set_ylim((max_width * -1, max_width))
-    ax.set_xlim((max_width * -1, max_width))
+    ax.set_zlim((max_width * -2, max_width*2))
+    ax.set_ylim((max_width * -2, max_width*2))
+    ax.set_xlim((max_width * -2, max_width*2))
     ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
     ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
     ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
     plt.axis('off')
 
-    for i in range(num_towers):
-        if plot_lines_to_tx:
-            # line between transmitter and tx
-            ax.plot3D((towers[i][0], tx[0]),
-                      (towers[i][1], tx[1]),
-                      (towers[i][2], tx[2]))
+    def plot_lines():
+        for i in range(num_towers):
+            if plot_lines_to_tx:
+                # line between transmitter and tx
+                pl1 = ax.plot3D((towers[i][0], tx[0]),
+                          (towers[i][1], tx[1]),
+                          (towers[i][2], tx[2]))
 
-        for j in range(i + 1, num_towers):
-            if plot_lines_between_towers:
-                # Line between towers
-                ax.plot3D((towers[i][0], towers[j][0]),
-                          (towers[i][1], towers[j][1]),
-                          (towers[i][2], towers[j][2]))
+            for j in range(i + 1, num_towers):
+                if plot_lines_between_towers:
+                    # Line between towers
+                    pl2 = ax.plot3D((towers[i][0], towers[j][0]),
+                              (towers[i][1], towers[j][1]),
+                              (towers[i][2], towers[j][2]))
 
 
 
@@ -348,38 +350,54 @@ if plot_trilateration_spheresIntersection_circles:
             ax.scatter3D(tx[0], tx[1], tx[2], color="g", s=10)
 
     # Annotations, to be updated during animation
-    cur_time = ax.text(0, 30e3, 26e3, 't = 0')
-    t0 = ax.text(0, 30e3, 23e3, 'Tower 0 received at t = ')
-    t1 = ax.text(0, 30e3, 20e3, 'Tower 1 received at t = ')
-    t2 = ax.text(0, 30e3, 17e3, 'Tower 2 received at t = ')
-    t3 = ax.text(0, 30e3, 14e3, 'Tower 3 received at t = ')
+    l = 40e3
+    k = 3e3
+    cur_time = ax.text(0, 30e3, l + k, 't = 0')
+    tower_text = []
+    for i in range(num_towers):
+        text = ax.text(0, 30e3, -i * k + l, 'Tower {} received at t = '.format(i))
+        tower_text.append(text)
 
     v_vec = ax.quiver(tx[0], tx[1] + 1e3, tx[2], 0, 1, 0,
                       length=2500, normalize=True, fc='k', ec='k')
     v_ann = ax.text3D(tx[0], tx[1] + 1e3, tx[2], 'v = {:.0E} m/s'.format(v))
-    t0_rec = 0
-    t1_rec = 0
-    t2_rec = 0
-    t3_rec = 0
-    TDOA1 = 0
-    TDOA2 = 0
-    TDOA3 = 0
-    TDOA4 = 0
-    TDOA5 = 0
-    TDOA6 = 0
+    t_rec = 0
+    TDOA1 = abs(rec_times[1] - rec_times[0])
+    TDOA2 = abs(rec_times[2] - rec_times[0])
+    TDOA3 = abs(rec_times[3] - rec_times[0])
+    TDOA4 = abs(rec_times[3] - rec_times[1])
+    TDOA5 = abs(rec_times[3] -
 
-    n_frames = 30
+ rec_times[2])
+    TDOA6 = abs(rec_times[2] - rec_times[1])
+    TDOA1_dist = v * TDOA1
+    TDOA2_dist = v * TDOA2
+    TDOA3_dist = v * TDOA3
+    TDOA4_dist = v * TDOA4
+    TDOA5_dist = v * TDOA5
+    TDOA6_dist = v * TDOA6
+
+    n_frames = 10
     max_seconds = 1e-4
     max_d = 1e5
 
     def animate1(i):
-        global  t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann, TDOA_dist1, \
-            TDOA_dist2, TDOA_dist3, TDOA_dist4, TDOA_dist5, TDOA_dist6
+        global t_rec, tower_text, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann, TDOA1_dist, \
+            TDOA2_dist, TDOA3_dist, TDOA4_dist, TDOA5_dist, TDOA6_dist
 
         t = i / n_frames * max_seconds
         Radius = v * t
 
         ax.collections.clear()
+
+        max_width = max(tx_square_side, rx_square_side) / 2
+        ax.set_zlim((max_width * -2, max_width * 2))
+        ax.set_ylim((max_width * -2, max_width * 2))
+        ax.set_xlim((max_width * -2, max_width * 2))
+        ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
+        ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
+        ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
+        plt.axis('off')
 
         plot_towers()
         v_vec = ax.quiver(tx[0], tx[1] + Radius, tx[2], 0, 1, 0,
@@ -388,85 +406,81 @@ if plot_trilateration_spheresIntersection_circles:
 
         plot_tx(radius=Radius)
         cur_time.set_text('t = {:.2E} s'.format(t))
-        if t >= rec_times[0] and t0_rec == 0:
-            t0_rec = t
-            t0.set_text(t0.get_text() + '{:.2E} s'.format(t0_rec))
-        if t >= rec_times[1] and t1_rec == 0:
-            t1_rec = t
-            t1.set_text(t1.get_text() + '{:.2E} s'.format(t1_rec))
-        if t >= rec_times[2] and t2_rec == 0:
-            t2_rec = t
-            t2.set_text(t2.get_text() + '{:.2E} s'.format(t2_rec))
-        if t >= rec_times[3] and t3_rec == 0:
-            t3_rec = t
-            t3.set_text(t3.get_text() + '{:.2E} s'.format(t3_rec))
-        if t0_rec != 0 and t1_rec != 0 and TDOA1 == 0:
-            TDOA1 = t1_rec - t0_rec
-            TDOA_dist1 = v * TDOA1
-            #TDOA1_ann.set_text(TDOA1_ann.get_text() + 't1-t0 =' + '{:.2E} s'.format(TDOA1))
-        if t0_rec != 0 and t2_rec != 0 and TDOA2 == 0:
-            TDOA2 = abs(t2_rec - t0_rec)
-            TDOA_dist2 = v * TDOA2
-            #TDOA2_ann.set_text(TDOA2_ann.get_text() + 't2-t0 =' + '{:.2E} s'.format(TDOA2))
-        if t0_rec != 0 and t3_rec != 0 and TDOA3 == 0:
-            TDOA3 = abs(t3_rec - t0_rec)
-            TDOA_dist3 = v * TDOA3
-            #TDOA3_ann.set_text(TDOA3_ann.get_text() + 't3-t0 =' + '{:.2E} s'.format(TDOA3))
-        if t1_rec != 0 and t3_rec != 0 and TDOA4 == 0:
-            TDOA4 = abs(t3_rec - t1_rec)
-            TDOA_dist4 = v * TDOA4
-            #TDOA4_ann.set_text(TDOA4_ann.get_text() + 't3-t1 =' + '{:.2E} s'.format(TDOA4))
-        if t2_rec != 0 and t3_rec != 0 and TDOA5 == 0:
-            TDOA5 = abs(t3_rec - t2_rec)
-            TDOA_dist5 = v * TDOA5
-            #TDOA5_ann.set_text(TDOA5_ann.get_text() + 't3-t2 =' + '{:.2E} s'.format(TDOA5))
-        if t1_rec != 0 and t2_rec != 0 and TDOA6 == 0:
-            TDOA6 = abs(t2_rec - t1_rec)
-            TDOA_dist6 = v * TDOA6
-            #TDOA6_ann.set_text(TDOA6_ann.get_text() + 't2-t2 =' + '{:.2E} s'.format(TDOA6))
 
+        for u in range(num_towers):
+            print('Tower {}: t = {}, rec_times[u] = {}'.format(u, t, rec_times[u]))
+            if t >= rec_times[u]:
+                tower_text[u].set_text('Tower {} received at t = {} s'.format(u, rec_times[u]))
 
     def animate2(i):
-        global t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann, TDOA_dist1, \
-            TDOA_dist2, TDOA_dist3, TDOA_dist4, TDOA_dist5, TDOA_dist6
+        global t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, v_vec, v_ann, TDOA1_dist, \
+            TDOA2_dist, TDOA3_dist, TDOA4_dist, TDOA5_dist, TDOA6_dist
 
-        d = i / n_frames * max_d
-
-        d0 = np.clip(d, i / n_frames * max_d, distances[0])
-        d1 = np.clip(d, i / n_frames * max_d, distances[1])
-        d2 = np.clip(d, i / n_frames * max_d, distances[2])
-        d3 = np.clip(d, i / n_frames * max_d, distances[3])
         ax.clear()
         ax.collections.clear()
+
         max_width = max(tx_square_side, rx_square_side) / 2
+        ax.set_zlim((max_width * -2, max_width * 2))
+        ax.set_ylim((max_width * -2, max_width * 2))
+        ax.set_xlim((max_width * -2, max_width * 2))
         ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
         ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
         ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
         plt.axis('off')
 
+        plot_lines()
         plot_towers()
 
-        r1 = np.clip(d, i / n_frames * max_d, r[0])
-        r2 = np.clip(d, i / n_frames * max_d, r[1])
-        r3 = np.clip(d, i / n_frames * max_d, r[2])
+        d = i / n_frames * max_d
 
-        kugel1 = Kugeln(radius=d0, x=x0[0], y=y0[0], z=z0[0])
-        kugel1.coordinaten()
-        kugel2 = Kugeln(radius=d1 + TDOA_dist1, x=x0[1], y=y0[1], z=z0[1])
-        kugel2.coordinaten()
+        first_tower = int(np.argmin(rec_times))
+        d0 = [np.clip(d, d, distances[first_tower])]
+        kugel_1 = Kugeln(radius=d0, x=x0[first_tower], y=y0[first_tower], z=z0[first_tower])
+        kugel_1.coordinaten()
 
-        circle12(radius=r1 + TDOA_dist1)
-        # circle13(radius=r1 + TDOA_dist2)
-        # circle14(radius=r1 + TDOA_dist3)
-        # circle23(radius=r2 + TDOA_dist6)
-        # circle24(radius=r2 + TDOA_dist4)
-        # circle34(radius=r3 + TDOA_dist5)
-        print("\r d = : " + str(d), end="")
-        print("\r Tower 0 radius r0 = : " + str(d0), end="")
-        print("\r Tower 1 radius r1 = : " + str(d1 + TDOA_dist1), end="")
-        print("\r Tower 2 radius r2 = : " + str(d2 + TDOA_dist2), end="")
-        print("\r Tower 3 radius r3 = : " + str(d3 + TDOA_dist3), end="")
 
+        for j in [x for x in range(towers.shape[0]) if x != first_tower]:
+            TDOA_j = v * (rec_times[j] - rec_times[first_tower])
+            d1 = [np.clip(d, d + TDOA_j, distances[j])]
+            print('tower', str(first_tower), 'to', str(j))
+            kugel_i = Kugeln(radius=d1, x=x0[j], y=y0[j], z=z0[j])
+            kugel_i.coordinaten()
+
+            #d = i / n_frames * max_d
+#
+            #first_tower = int(np.argmin(rec_times))
+            #circles[first_tower].radius = d
+#
+            #for j in [x for x in range(towers.shape[0]) if x != first_tower]:
+            #    # print('tower', str(first_tower), 'to', str(j))
+            #    locus = get_locus(tower_1=(towers[first_tower][0],
+            #                               towers[first_tower][1]),
+            #                      tower_2=(towers[j][0], towers[j][1]),
+            #                      time_1=rec_times[first_tower],
+            #                      time_2=rec_times[j],
+            #                      v=v, delta_d=delta_d, max_d=d)
+            #    locus_plots[j].set_xdata(locus[0])
+            #    locus_plots[j].set_ydata(locus[1])
+#
+            #    TDOA_j = v * (rec_times[j] - rec_times[first_tower])
+            #    circles[j].radius = d + TDOA_j
+        r1 = np.clip(d, d + TDOA1_dist, r[0])
+        r2 = np.clip(d, d + TDOA2_dist, r[1])
+        r3 = np.clip(d, d + TDOA3_dist, r[2])
+        r4 = np.clip(d, d + TDOA4_dist, r[0])
+        r5 = np.clip(d, d + TDOA5_dist, r[1])
+        r6 = np.clip(d, d + TDOA6_dist, r[2])
+        #circle12(radius=r1)
+        #circle13(radius=r2)
+        #circle14(radius=r3)
+        #circle23(radius=r4)
+        #circle24(radius=r5)
+        #circle34(radius=r6)
+        #print("\r d = : " + str(d), end="\n")
+        #print("\r Tower 0 radius r0 = : " + str(d0), end="\n")
+        #print("\r Tower 1 radius r1 = : " + str(d1 + TDOA_dist1), end="\n")
+        #print("\r Tower 2 radius r2 = : " + str(d2 + TDOA_dist2), end="\n")
+        #print("\r Tower 3 radius r3 = : " + str(d3 + TDOA_dist3), end="\n")
 
 
     anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
@@ -475,16 +489,17 @@ if plot_trilateration_spheresIntersection_circles:
     # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
     plt.show()
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(14, 8))
     ax = fig.add_subplot(projection='3d')
+    fig.subplots_adjust(left=0.2, right=0.8)
     plt.axis('off')
-    anim_2 = FuncAnimation(fig, animate2,frames=n_frames, interval=1, blit=False, repeat=False)
+
+    anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=16, blit=False, repeat=True)
     # anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    # plt.close()
+    #anim_2.save('/home/mohammed/Animationen/TDOA.gif', writer='imagemagick', fps=60)
+    #plt.close()
     # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
     plt.show()
-
-
 
 
 
