@@ -129,5 +129,6 @@ if __name__ == "__main__":
         print(abstand[p])
 
     # Call the function and compute the location
+
     posi = Trilateration_3D(abstand)
     print("The location of the point is: " + str(posi))

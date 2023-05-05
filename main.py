@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
 import sympy as sy
+from scipy.optimize import least_squares
 import math
 import sys
 import time
@@ -28,13 +29,13 @@ tx_square_side = 5e3
 # in this area.
 rx_square_side = 30e3
 
-# Speed of transmission propogation. Generally equal to speed of
+# Speed of transmission propagation. Generally equal to speed of
 # light for radio signals.
 v = 299792458
 
 # Time at which transmission is performed. Really just useful to
 # make sure the code is using relative times rather than depending on one
-# of the receive times being zero.
+# of the reception times being zero.
 t_0 = 2.5
 
 # Metre increments to radii of circles when generating locus of
@@ -160,148 +161,46 @@ if plot_trilateration_spheresIntersection_circles:
             Z = self.z + self.radius * np.cos(phi)
             plot = ax.plot_surface(
                 X, Y, Z, rstride=2, cstride=2, cmap=cm.coolwarm,
-                linewidth=0, antialiased=False, alpha=0.1)
+                linewidth=0, antialiased=False, alpha=0.2)
             return plot
 
-    d = x0[1] - x0[0]
-    g = y0[1] - y0[0]
-    h = z0[1] - z0[0]
-    e = x0[2] - x0[0]
-    f = y0[2] - y0[0]
-    n = z0[2] - z0[0]
-    a = x0[3] - x0[0]
-    b = y0[3] - y0[0]
-    c = z0[3] - z0[0]
-    x, y, z = sy.symbols("x y z")
-    equations = [
-        sy.Eq((x - x0[0]) ** 2 + (y - y0[0]) ** 2 + (z - z0[0]) ** 2, r[0] ** 2),
-        sy.Eq((x - d - x0[0]) ** 2 + (y - g - y0[0]) ** 2 + (z - h - z0[0]) ** 2, r[1] ** 2),
-        sy.Eq((x - e - x0[0]) ** 2 + (y - f - y0[0]) ** 2 + (z - n - z0[0]) ** 2, r[2] ** 2),
-        sy.Eq((x - a - x0[0]) ** 2 + (y - b - y0[0]) ** 2 + (z - c - z0[0]) ** 2, r[3] ** 2),
-    ]
-    if np.sqrt(d ** 2 + g ** 2 + h ** 2) <= (r[0] + r[1]) and \
-            np.sqrt(e ** 2 + f ** 2 + n ** 2) <= (r[0] + r[2]) and \
-            np.sqrt(a ** 2 + b ** 2 + c ** 2) <= (r[0] + r[3]) and \
-            np.sqrt((abs(d) - abs(e)) ** 2 + (abs(g) - abs(f)) ** 2 + (abs(h) - abs(n)) ** 2) <= (
-            r[1] + r[2]) and \
-            np.sqrt((abs(d) - abs(a)) ** 2 + (abs(g) - abs(b)) ** 2 + (abs(h) - abs(c)) ** 2) <= (
-            r[1] + r[3]) and \
-            np.sqrt((abs(e) - abs(a)) ** 2 + (abs(f) - abs(b)) ** 2 + (abs(n) - abs(c)) ** 2) <= (r[2] + r[3]):
-        solved = sy.solve(equations)
-        if np.shape(solved) > (0,):
-            lsg1 = solved[0]
-            data1 = list(lsg1.values())
-            print(f'The first location of the point is: {data1}')
-            if len(solved) == 2:
-                lsg2 = solved[1]
-                data2 = list(lsg2.values())
-                print(f'The second location of the point is: {data2}')
-            else:
-                data2 = data1
-            # Treffpunkt
-            eqPoint1 = ax.scatter3D(data1[0], data1[1], data1[2])
-            eqPoint2 = ax.scatter3D(data2[0], data2[1], data2[2])
-        else:
-            posi = Trilateration_3D(towers, distances)
-            print(f'there is no sy.solve for the intesection, but Trilateration_3D has one:{posi}')
-            # eqPoint1 = ax.scatter3D(posi[0], posi[1], posi[2])
-            # eqPoint2 = eqPoint1
-    else:
-        print(f'there is no Intersection')
-        eqPoint1 = [0, 0, 0]
-        eqPoint2 = [0, 0, 0]
-    theta, te = np.linspace(0, 2 * np.pi, 80), np.linspace(0, 2 * np.pi, 80)
-    def circle12(radius):
-        if np.sqrt(d ** 2 + g ** 2 + h ** 2) <= (r[0] + r[1]):
-            X12 = (d ** 2 + g ** 2 + h ** 2 + r[0] ** 2 - r[1] ** 2) / (
-                    2 * np.sqrt(d ** 2 + g ** 2 + h ** 2) * r[0])
-            coord = sphereCircle(radius, 0, math.atan2(g, d), np.arccos(X12), theta)
-            array_2d = np.array(coord)
-            Zahl = [x0[0], y0[0], z0[0]]
-            array_1d = np.array(Zahl)
-            coordinats_12 = array_2d + array_1d[:, np.newaxis]
-            plot_circle_1 = ax.plot(
-                coordinats_12[0], coordinats_12[1], coordinats_12[2],'g-')
-        else:
-            plot_circle_1 = []
-    def circle13(radius):
-        if np.sqrt(e ** 2 + f ** 2 + n ** 2) <= (r[0] + r[2]):
-            X13 = (r[0] ** 2 - r[2] ** 2 + e ** 2 + f ** 2 + n ** 2) / (
-                    2 * r[0] * np.sqrt(e ** 2 + f ** 2 + n ** 2))
-            coord = sphereCircle(radius, 0, math.atan2(f, e), np.arccos(X13), te)
-            array_2d = np.array(coord)
-            Zahl = [x0[0], y0[0], z0[0]]
-            array_1d = np.array(Zahl)
-            coordinats_13 = array_2d + array_1d[:, np.newaxis]
-            plot_circle_2 = ax.plot(
-                coordinats_13[0], coordinats_13[1], coordinats_13[2],'g-')
-        else:
-            plot_circle_2 = []
-    def circle14(radius):
-        if np.sqrt(a ** 2 + b ** 2 + c ** 2) <= (r[0] + r[3]):
-            X14 = (r[0] ** 2 - r[3] ** 2 + a ** 2 + b ** 2 + c ** 2) / (
-                    2 * r[0] * np.sqrt(a ** 2 + b ** 2 + c ** 2))
-            coord = sphereCircle(radius, math.atan2(c, np.sqrt(a ** 2 + b ** 2)), math.atan2(b, a),
-                                 np.arccos(X14),
-                                 te)
-            array_2d = np.array(coord)
-            Zahl = [x0[0], y0[0], z0[0]]
-            array_1d = np.array(Zahl)
-            coordinats_14 = array_2d + array_1d[:, np.newaxis]
-            plot_circle_4 = ax.plot(
-                coordinats_14[0], coordinats_14[1], coordinats_14[2],'g-')
-        else:
-            plot_circle_4 = []
-    def asec(x):
-        if x < -1 or x > 1:
-            return math.acos(1 / x)
-        else:
-            return 0
-    def circle23(radius):
-        if np.sqrt((abs(d) - abs(e)) ** 2 + (abs(g) - abs(f)) ** 2 + (abs(h) - abs(n)) ** 2) <= (r[1] + r[2]):
-            X23 = 2 * np.sqrt((d - e) ** 2 + (f - g) ** 2 + (n - h) ** 2) * r[1] / (
-                    (d - e) ** 2 + (f - g) ** 2 + (n - h) ** 2 + r[1] ** 2 - r[2] ** 2)
-            coord = sphereCircle(radius, np.pi - math.atan2(n - h, np.sqrt((d - e) ** 2 + (g - f) ** 2)),
-                                 (math.atan2(g - f, d - e)),
-                                 asec(X23), te)
-            array_2d = np.array(coord)
-            Zahl = [d + x0[0], g + y0[0], h + z0[0]]
-            array_1d = np.array(Zahl)
-            coordinats_23 = array_2d + array_1d[:, np.newaxis]
-            plot_circle_3 = ax.plot(
-                coordinats_23[0], coordinats_23[1], coordinats_23[2],'g-')
-        else:
-            plot_circle_3 = []
-    def circle24(radius):
-        if np.sqrt((abs(d) - abs(a)) ** 2 + (abs(g) - abs(b)) ** 2 + (abs(h) - abs(c)) ** 2) <= (r[1] + r[3]):
-            X24 = 2 * np.sqrt((d - a) ** 2 + (b - g) ** 2 + (c - h) ** 2) * r[1] / (
-                    (d - a) ** 2 + (g - b) ** 2 + (h - c) ** 2 + r[1] ** 2 - r[3] ** 2)
-            coord = sphereCircle(radius, np.pi - math.atan2(c - h, np.sqrt((d - a) ** 2 + (g - b) ** 2)),
-                                 (math.atan2(g - b, d - a)),
-                                 asec(X24), te)
-            array_2d = np.array(coord)
-            Zahl = [d + x0[0], g + y0[0], h + z0[0]]
-            array_1d = np.array(Zahl)
-            coordinats_24 = array_2d + array_1d[:, np.newaxis]
-            plot_circle_5 = ax.plot(
-                coordinats_24[0], coordinats_24[1], coordinats_24[2],'g-')
-        else:
-            plot_circle_5 = []
-    def circle34(radius):
-        if np.sqrt((abs(e) - abs(a)) ** 2 + (abs(f) - abs(b)) ** 2 + (abs(n) - abs(c)) ** 2) <= (r[2] + r[3]):
-            X34 = 2 * np.sqrt((e - a) ** 2 + (f - b) ** 2 + (c - n) ** 2) * r[2] / (
-                    (e - a) ** 2 + (f - b) ** 2 + (c - n) ** 2 + r[2] ** 2 - r[3] ** 2)
-            coord = sphereCircle(radius, np.pi - math.atan2(c - n, np.sqrt((e - a) ** 2 + (f - b) ** 2)),
-                                 (math.atan2(f - b, e - a)),
-                                 asec(X34), te)
-            array_2d = np.array(coord)
-            Zahl = [e + x0[0], f + y0[0], n + z0[0]]
-            array_1d = np.array(Zahl)
-            coordinats_34 = array_2d + array_1d[:, np.newaxis]
-            plot_circle_6 = ax.plot(
-                coordinats_34[0], coordinats_34[1], coordinats_34[2],'g-')
-        else:
-            plot_circle_6 = []
+    def solveEquations():
+        x, y, z = sy.symbols("x y z")
+        first_tower = int(np.argmin(rec_times))
+        dx, dy, dz = [], [], []
+        disti = []
+        equations = []
+        eq0 = sy.Eq((x - x0[first_tower]) ** 2 + (y - y0[first_tower]) ** 2 +
+                    (z - z0[first_tower]) ** 2, distances[first_tower] ** 2)
+        equations.append(eq0)
+        for i in [x for x in range(towers.shape[0]) if x != first_tower]:
+            dx.append(x0[i] - x0[first_tower])
+            dy.append(y0[i] - y0[first_tower])
+            dz.append(z0[i] - z0[first_tower])
+            disti.append(distances[i])
+        for i in range(towers.shape[0] - 1):
+            eq = sy.Eq((x - dx[i] - x0[first_tower]) ** 2 + (y - dy[i] - y0[first_tower]) ** 2 +
+                       (z - dz[i] - z0[first_tower]) ** 2, disti[i] ** 2)
+            equations.append(eq)
+        print(equations)
+        # Convert the list of equations into a list of Expr objects
+        exprs = [eq.lhs - eq.rhs for eq in equations]
+
+        # Create the system of equations as a Sympy Matrix object
+        system = sy.Matrix(exprs)
+
+        # set the initial solution for the numerical method
+        #initial_solution = (x0[first_tower], y0[first_tower], z0[first_tower])
+        initial_solution = (50, 50, 50)
+        # Solve the system of equations for x, y and z coordinates
+        solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=50, verify=False, rational=True)
+
+        print(f'locations is: {solutions}')
+        posi = Trilateration_3D(towers, distances)
+        print(f'there is no sy.solve for the intesection, but Trilateration_3D has one: {posi}')
+    solveEquations()
+
+
     def plot_towers():
         for k in range(towers.shape[0]):
             x = towers[k][0]
