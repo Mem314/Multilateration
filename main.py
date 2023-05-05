@@ -259,11 +259,8 @@ if plot_trilateration_spheresIntersection_circles:
                 tower_text[u].set_text('Tower {} received at t = {} s'.format(u, rec_times[u]))
 
 
-
     def animate2(i):
-        global t0_rec, t1_rec, t2_rec, t3_rec, TDOA1, TDOA2, TDOA3, TDOA4, TDOA5, TDOA6, TDOA1_dist, \
-            TDOA2_dist, TDOA3_dist, TDOA4_dist, TDOA5_dist, TDOA6_dist
-
+        global TDOA, TDOA_dist
         ax.clear()
         ax.collections.clear()
 
