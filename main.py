@@ -147,14 +147,7 @@ if plot_trilateration_spheresIntersection_circles:
     # Kugeln
     Theta, Phi = np.linspace(0, 2 * np.pi, 40), np.linspace(0, np.pi, 40)
     theta1, phi = np.meshgrid(Theta, Phi)
-    def plot_tx(radius):
-        X1 = tx[0] + radius * np.sin(phi) * np.cos(theta1)
-        Y1 = tx[1] + radius * np.sin(phi) * np.sin(theta1)
-        Z1 = tx[2] + radius * np.cos(phi)
-        plot_trilateration_tx_plot = ax.plot_surface(
-            X1, Y1, Z1, rstride=1, cstride=1, cmap=cm.coolwarm,
-            linewidth=0, antialiased=False, alpha=0.3)
-        return plot_trilateration_tx_plot
+
     class Kugeln:
         def __init__(self, radius, x, y, z):
             self.radius = radius
@@ -167,36 +160,8 @@ if plot_trilateration_spheresIntersection_circles:
             Z = self.z + self.radius * np.cos(phi)
             plot = ax.plot_surface(
                 X, Y, Z, rstride=2, cstride=2, cmap=cm.coolwarm,
-                linewidth=0, antialiased=False, alpha=0.2)
+                linewidth=0, antialiased=False, alpha=0.1)
             return plot
-    def kugel1(r1):
-        X2 = x0[0] + r1 * np.sin(phi) * np.cos(theta1)
-        Y2 = y0[0] + r1 * np.sin(phi) * np.sin(theta1)
-        Z2 = z0[0] + r1 * np.cos(phi)
-        ax.plot_surface(
-            X2, Y2, Z2, rstride=2, cstride=2, cmap=cm.coolwarm,
-            linewidth=0, antialiased=False, alpha=0.2)
-    def kugel2(r2):
-        X2 = x0[1] + r2 * np.sin(phi) * np.cos(theta1)
-        Y2 = y0[1] + r2 * np.sin(phi) * np.sin(theta1)
-        Z2 = z0[1] + r2 * np.cos(phi)
-        ax.plot_surface(
-            X2, Y2, Z2, rstride=2, cstride=2, cmap=cm.coolwarm,
-            linewidth=0, antialiased=False, alpha=0.2)
-    def kugel3(r3):
-        X2 = x0[2] + r3 * np.sin(phi) * np.cos(theta1)
-        Y2 = y0[2] + r3 * np.sin(phi) * np.sin(theta1)
-        Z2 = z0[2] + r3 * np.cos(phi)
-        ax.plot_surface(
-            X2, Y2, Z2, rstride=2, cstride=2, cmap=cm.coolwarm,
-            linewidth=0, antialiased=False, alpha=0.2)
-    def kugel4(r4):
-        X2 = x0[3] + r4 * np.sin(phi) * np.cos(theta1)
-        Y2 = y0[3] + r4 * np.sin(phi) * np.sin(theta1)
-        Z2 = z0[3] + r4 * np.cos(phi)
-        ax.plot_surface(
-            X2, Y2, Z2, rstride=1, cstride=2, cmap=cm.coolwarm,
-            linewidth=0, antialiased=False, alpha=0.2)
 
     d = x0[1] - x0[0]
     g = y0[1] - y0[0]
@@ -385,7 +350,8 @@ if plot_trilateration_spheresIntersection_circles:
                           length=10000, normalize=True, fc='k', ec='k')
         v_ann.set_position((tx[0] + 4e3 + Radius, tx[1] + 4e3))
 
-        plot_tx(radius=Radius)
+        kugel_tx = Kugeln(radius=Radius, x=tx[0], y=tx[1], z=tx[2])
+        kugel_tx.coordinaten()
         cur_time.set_text('t = {:.2E} s'.format(t))
 
         for u in range(num_towers):
@@ -410,24 +376,28 @@ if plot_trilateration_spheresIntersection_circles:
         ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
         ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
         ax.axis('off')
+
         plot_lines()
         plot_towers()
+
         d = i / n_frames * max_d
         first_tower = int(np.argmin(rec_times))
         d0 = [np.clip(d, d, distances[first_tower])]
-        kugel_1 = Kugeln(radius=d0, x=x0[first_tower], y=y0[first_tower], z=z0[first_tower])
-        kugel_1.coordinaten()
+        kugel_0 = Kugeln(radius=d0, x=x0[first_tower], y=y0[first_tower], z=z0[first_tower])
+        kugel_0.coordinaten()
         for j in [x for x in range(towers.shape[0]) if x != first_tower]:
             TDOA_j = v * (rec_times[j] - rec_times[first_tower])
             d1 = [np.clip(d, d + TDOA_j, distances[j])]
             kugel_i = Kugeln(radius=d1, x=x0[j], y=y0[j], z=z0[j])
             kugel_i.coordinaten()
-            r1 = np.clip(d, d + TDOA1_dist, r[0])
-            r2 = np.clip(d, d + TDOA2_dist, r[1])
-            r3 = np.clip(d, d + TDOA3_dist, r[2])
-            r4 = np.clip(d, d + TDOA4_dist, r[0])
-            r5 = np.clip(d, d + TDOA5_dist, r[1])
-            r6 = np.clip(d, d + TDOA6_dist, r[2])
+
+
+            #r1 = np.clip(d, d + TDOA_dist[0], r[0])
+            #r2 = np.clip(d, d + TDOA_dist[1], r[1])
+            #r3 = np.clip(d, d + TDOA_dist[2], r[2])
+            #r4 = np.clip(d, d + TDOA_dist[3], r[0])
+            #r5 = np.clip(d, d + TDOA_dist[4], r[1])
+            #r6 = np.clip(d, d + TDOA_dist[5], r[2])
             #circle12(radius=r1)
             #circle13(radius=r2)
             #circle14(radius=r3)

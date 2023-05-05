@@ -39,10 +39,10 @@ point_1.plot_points()
 point_2.plot_points()
 point_3.plot_points()
 
-num_points = np.array(range(1, 500))
+num_points = np.array(range(1, 2300))
 
-a = p-1  # upper bound
-b = 1    # lower bound
+a0 = p-1  # upper bound
+b0 = 1    # lower bound
 
 #first_point = ((np.random.rand(num_points, 2)) * (b-a)) + a
 
@@ -109,4 +109,68 @@ if The_Sierpinski_Triangle:
 
     plt.show()
 
+
+class Kugeln:
+    def __init__(self, radius, x, y, z):
+        self.radius = radius
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def coordinaten(self, phi, theta):
+        X = self.x + self.radius * np.sin(phi) * np.cos(theta)
+        Y = self.y + self.radius * np.sin(phi) * np.sin(theta)
+        Z = self.z + self.radius * np.cos(phi)
+        return X, Y, Z
+
+
+# create n instances of the Kugeln class
+n = 3
+kugeln = []
+for i in range(n):
+    kugeln.append(Kugeln(radius=1, x=i, y=i, z=i))
+
+# set up the plot
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.set_xlim([-3, 3])
+ax.set_ylim([-3, 3])
+ax.set_zlim([-3, 3])
+
+# create a list of phi and theta values for the circles
+phi_vals = np.linspace(0, np.pi, 50)
+theta_vals = np.linspace(0, 2 * np.pi, 50)
+
+# initialize a list of circle plots
+circle_plots = []
+
+
+# animation function
+def animate(i):
+    # clear the previous frame
+    ax.cla()
+    ax.set_xlim([-3, 3])
+    ax.set_ylim([-3, 3])
+    ax.set_zlim([-3, 3])
+
+    # iterate over all pairs of spheres
+    for j in range(n):
+        for k in range(j + 1, n):
+            # calculate the intersection of the spheres
+            x1, y1, z1 = kugeln[j].coordinaten(phi_vals, theta_vals)
+            x2, y2, z2 = kugeln[k].coordinaten(phi_vals, theta_vals)
+            d = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2)
+            x, y, z = 0.5 * (x1 + x2), 0.5 * (y1 + y2), 0.5 * (z1 + z2)
+            if (d <= kugeln[j].radius + kugeln[k].radius).all():
+                # plot the circle if the spheres intersect
+                circle_plots.append(ax.plot(x, y, z, 'bo')[0])
+
+    return circle_plots
+
+
+# create the animation
+ani = FuncAnimation(fig, animate, frames=30, interval=1, blit=True)
+
+# display the animation
+plt.show()
 
