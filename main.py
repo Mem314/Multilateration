@@ -14,6 +14,8 @@ from IPython.display import display, clear_output
 from typing import Any
 from dataclasses import dataclass
 
+def ggg():
+    pass
 
 # How many towers. All towers receive the transmission.
 num_towers = 4
