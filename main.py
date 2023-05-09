@@ -101,6 +101,8 @@ print('rec_times:', rec_times)
 
 # Plot towers and transmission location.
 
+def dfasda():
+    pass
 
 x0, y0, z0 = [], [], []
 for i in range(towers.shape[0]):
