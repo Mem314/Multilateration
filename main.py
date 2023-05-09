@@ -200,144 +200,62 @@ if plot_trilateration_spheresIntersection_circles:
         print(f'Trilateration_3D location is: {posi}')
     solveEquations()
 
-    def circles(radius):
+    def circles(radius_0, radius):
         theta, te = np.linspace(0, 2 * np.pi, 80), np.linspace(0, 2 * np.pi, 80)
         first_tower = int(np.argmin(rec_times))
         dx, dy, dz = [], [], []
         disti = []
+        dx.insert(first_tower, x0[first_tower])
+        dy.insert(first_tower, y0[first_tower])
+        dz.insert(first_tower, z0[first_tower])
+        disti.insert(first_tower, distances[first_tower])
         for i in [x for x in range(towers.shape[0]) if x != first_tower]:
-            dx.append(x0[i] - x0[first_tower])
-            dy.append(y0[i] - y0[first_tower])
-            dz.append(z0[i] - z0[first_tower])
-            disti.append(distances[i])
+            dx.insert(i, x0[i] - x0[first_tower])
+            dy.insert(i, y0[i] - y0[first_tower])
+            dz.insert(i, z0[i] - z0[first_tower])
+            disti.insert(i, distances[i])
+
+        def asec(x):
+            if x < -1 or x > 1:
+                return math.acos(1 / x)
+            else:
+                return 0
 
         for i in [x for x in range(towers.shape[0]) if x != first_tower]:
-            if np.sqrt((dx[first_tower] - dx[i]) ** 2 + (dy[first_tower] - dy[i]) ** 2 +
-                       (dz[first_tower] - dz[i]) ** 2) <= (disti[first_tower] + disti[i]):
-                X_0 = 2 * np.sqrt(((dx[first_tower] - dx[i]) ** 2 + (dy[first_tower] - dy[i]) ** 2 +
-                                 (dz[first_tower] - dz[i]) ** 2)) * disti[first_tower] / \
-                    ((dx[first_tower] - dx[i]) ** 2 + (dy[first_tower] - dy[i]) ** 2 +
-                     (dz[first_tower] - dz[i]) ** 2 + disti[first_tower] ** 2 - disti[i] ** 2)
-                coord_0 = sphereCircle(disti[first_tower], np.pi -
-                                     math.atan2(dz[i] - dz[first_tower], np.sqrt((dx[first_tower] - dx[i]) ** 2 + (dy[first_tower] - dy[i]) ** 2)),
-                                     (math.atan2(dy[first_tower] - dy[i], dx[first_tower] - dx[i])),
-                                     asec(X_0), te)
+            if np.sqrt(dx[i]**2 + dy[i]**2 +
+                       dz[i]**2) <= (disti[first_tower] + disti[i]):
+                X_0 = (dx[i]**2 + dy[i]**2 + dz[i]**2 + disti[first_tower]**2 - disti[i]**2) / 2*disti[i]*np.sqrt(
+                    (dx[i]**2 + dy[i]**2 + dz[i]**2))
+                coord_0 = sphereCircle(radius_0, np.pi - math.atan2(dz[i], np.sqrt(dx[i]**2 + dy[i]**2)), math.atan2(dy[i], dx[i]),
+                                    np.arccos(X_0), te)
                 array_2d = np.array(coord_0)
-                Zahl = [dx[first_tower] + x0[first_tower], dy[first_tower] + y0[first_tower], dz[first_tower] + z0[first_tower]]
+                Zahl = [dx[first_tower], dy[first_tower], dz[first_tower]]
                 array_1d = np.array(Zahl)
                 coordinats_0 = array_2d + array_1d[:, np.newaxis]
                 plot_circle_0 = ax.plot(
-                    coordinats_0[0], coordinats_0[1], coordinats_0[2])
-            for j in [y for y in range(towers.shape[0]) if y != first_tower]:
+                    coordinats_0[0], coordinats_0[1], coordinats_0[2], color='m')
+            for j in [y for y in range(i, towers.shape[0]) if y != first_tower and y != i]:
                 if np.sqrt((dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2 + (dz[j] - dz[i]) ** 2) <= (disti[j] + disti[i]):
                     X = 2 * np.sqrt(((dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2 +
                                      (dz[j] - dz[i]) ** 2)) * disti[i] / \
                         ((dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2 +
                          (dz[j] - dz[i]) ** 2 + disti[j] ** 2 - disti[i] ** 2)
-                    coord = sphereCircle(disti[i], np.pi -
+                    coord = sphereCircle(radius, np.pi -
                                          math.atan2(dz[i] - dz[first_tower], np.sqrt(
                                              (dx[first_tower] - dx[i]) ** 2 + (dy[first_tower] - dy[i]) ** 2)),
                                          (math.atan2(dy[first_tower] - dy[i], dx[first_tower] - dx[i])),
                                          asec(X), te)
                     array_2d = np.array(coord)
-                    Zahl = [dx[first_tower] + x0[first_tower], dy[first_tower] + y0[first_tower],
-                            dz[first_tower] + z0[first_tower]]
+                    Zahl = [dx[i] + dx[j], dy[i] + dy[j],
+                            dz[i] + dz[j]]
                     array_1d = np.array(Zahl)
                     coordinats = array_2d + array_1d[:, np.newaxis]
-                    plot_circle_5 = ax.plot(
-                        coordinats[0], coordinats[1], coordinats[2])
+                    #plot_circle = ax.plot(
+                    #    coordinats[0], coordinats[1], coordinats[2], color='b')
                 else:
                     plot_circle = []
             else:
                 plot_circle_0 = []
-    if np.sqrt(d ** 2 + g ** 2 + h ** 2) <= (r[0] + r[1]):
-        X12 = (d ** 2 + g ** 2 + h ** 2 + r[0] ** 2 - r[1] ** 2) / (
-                2 * np.sqrt(d ** 2 + g ** 2 + h ** 2) * r[0])
-        coord = sphereCircle(r[0], 0, math.atan2(g, d), np.arccos(X12), theta)
-        array_2d = np.array(coord)
-        Zahl = [x0[0], y0[0], z0[0]]
-        array_1d = np.array(Zahl)
-        coordinats_12 = array_2d + array_1d[:, np.newaxis]
-        plot_circle_1 = ax.plot(
-            coordinats_12[0], coordinats_12[1], coordinats_12[2])
-    else:
-        plot_circle_1 = []
-    if np.sqrt(e ** 2 + f ** 2 + n ** 2) <= (r[0] + r[2]):
-        X13 = (r[0] ** 2 - r[2] ** 2 + e ** 2 + f ** 2 + n ** 2) / (
-                2 * r[0] * np.sqrt(e ** 2 + f ** 2 + n ** 2))
-        coord = sphereCircle(r[0], 0, math.atan2(f, e), np.arccos(X13), te)
-        array_2d = np.array(coord)
-        Zahl = [x0[0], y0[0], z0[0]]
-        array_1d = np.array(Zahl)
-        coordinats_13 = array_2d + array_1d[:, np.newaxis]
-        plot_circle_2 = ax.plot(
-            coordinats_13[0], coordinats_13[1], coordinats_13[2])
-    else:
-        plot_circle_2 = []
-
-
-    def asec(x):
-        if x < -1 or x > 1:
-            return math.acos(1 / x)
-        else:
-            return 0
-
-
-    if np.sqrt((abs(d) - abs(e)) ** 2 + (abs(g) - abs(f)) ** 2 + (abs(h) - abs(n)) ** 2) <= (r[1] + r[2]):
-        X23 = 2 * np.sqrt((d - e) ** 2 + (f - g) ** 2 + (n - h) ** 2) * r[1] / (
-                (d - e) ** 2 + (f - g) ** 2 + (n - h) ** 2 + r[1] ** 2 - r[2] ** 2)
-        coord = sphereCircle(r[1], np.pi - math.atan2(n - h, np.sqrt((d - e) ** 2 + (g - f) ** 2)),
-                             (math.atan2(g - f, d - e)),
-                             asec(X23), te)
-        array_2d = np.array(coord)
-        Zahl = [d + x0[0], g + y0[0], h + z0[0]]
-        array_1d = np.array(Zahl)
-        coordinats_23 = array_2d + array_1d[:, np.newaxis]
-        plot_circle_3 = ax.plot(
-            coordinats_23[0], coordinats_23[1], coordinats_23[2])
-    else:
-        plot_circle_3 = []
-    if np.sqrt(a ** 2 + b ** 2 + c ** 2) <= (r[0] + r[3]):
-        X14 = (r[0] ** 2 - r[3] ** 2 + a ** 2 + b ** 2 + c ** 2) / (
-                2 * r[0] * np.sqrt(a ** 2 + b ** 2 + c ** 2))
-        coord = sphereCircle(r[0], math.atan2(c, np.sqrt(a ** 2 + b ** 2)), math.atan2(b, a), np.arccos(X14),
-                             te)
-        array_2d = np.array(coord)
-        Zahl = [x0[0], y0[0], z0[0]]
-        array_1d = np.array(Zahl)
-        coordinats_14 = array_2d + array_1d[:, np.newaxis]
-        plot_circle_4 = ax.plot(
-            coordinats_14[0], coordinats_14[1], coordinats_14[2])
-    else:
-        plot_circle_4 = []
-    if np.sqrt((abs(d) - abs(a)) ** 2 + (abs(g) - abs(b)) ** 2 + (abs(h) - abs(c)) ** 2) <= (r[1] + r[3]):
-        X24 = 2 * np.sqrt((d - a) ** 2 + (b - g) ** 2 + (c - h) ** 2) * r[1] / (
-                (d - a) ** 2 + (g - b) ** 2 + (h - c) ** 2 + r[1] ** 2 - r[3] ** 2)
-        coord = sphereCircle(r[1], np.pi - math.atan2(c - h, np.sqrt((d - a) ** 2 + (g - b) ** 2)),
-                             (math.atan2(g - b, d - a)),
-                             asec(X24), te)
-        array_2d = np.array(coord)
-        Zahl = [d + x0[0], g + y0[0], h + z0[0]]
-        array_1d = np.array(Zahl)
-        coordinats_24 = array_2d + array_1d[:, np.newaxis]
-        plot_circle_5 = ax.plot(
-            coordinats_24[0], coordinats_24[1], coordinats_24[2])
-    else:
-        plot_circle_5 = []
-    if np.sqrt((abs(e) - abs(a)) ** 2 + (abs(f) - abs(b)) ** 2 + (abs(n) - abs(c)) ** 2) <= (r[2] + r[3]):
-        X34 = 2 * np.sqrt((e - a) ** 2 + (f - b) ** 2 + (c - n) ** 2) * r[2] / (
-                (e - a) ** 2 + (f - b) ** 2 + (c - n) ** 2 + r[2] ** 2 - r[3] ** 2)
-        coord = sphereCircle(r[2], np.pi - math.atan2(c - n, np.sqrt((e - a) ** 2 + (f - b) ** 2)),
-                             (math.atan2(f - b, e - a)),
-                             asec(X34), te)
-        array_2d = np.array(coord)
-        Zahl = [e + x0[0], f + y0[0], n + z0[0]]
-        array_1d = np.array(Zahl)
-        coordinats_34 = array_2d + array_1d[:, np.newaxis]
-        plot_circle_6 = ax.plot(
-            coordinats_34[0], coordinats_34[1], coordinats_34[2])
-    else:
-        plot_circle_6 = []
 
 
 
@@ -362,7 +280,7 @@ if plot_trilateration_spheresIntersection_circles:
 
     v_vec = ax.quiver(tx[0] + 1e3, tx[1], tx[2], 1, 0, 0,
                       length=10000, normalize=False, fc='k', ec='k')
-    v_ann = ax.text3D(tx[0] + 4e3, tx[1]  + 4e3, tx[2], 'v = {} m/s'.format(v))
+    v_ann = ax.text3D(tx[0] + 4e3, tx[1] + 4e3, tx[2], 'v = {} m/s'.format(v))
     t_rec = 0
 
     TDOA = []
@@ -401,6 +319,7 @@ if plot_trilateration_spheresIntersection_circles:
 
     def animate2(i):
         global TDOA, TDOA_dist
+
         ax.clear()
         ax.collections.clear()
 
@@ -416,9 +335,11 @@ if plot_trilateration_spheresIntersection_circles:
         plot_lines()
         plot_towers()
 
+
         d = i / n_frames * max_d
         first_tower = int(np.argmin(rec_times))
         d0 = [np.clip(d, d, distances[first_tower])]
+        circles(radius_0=d0, radius=0)
         kugel_0 = Kugeln(radius=d0, x=x0[first_tower], y=y0[first_tower], z=z0[first_tower])
         kugel_0.coordinaten()
         for j in [x for x in range(towers.shape[0]) if x != first_tower]:
@@ -426,6 +347,8 @@ if plot_trilateration_spheresIntersection_circles:
             d1 = [np.clip(d, d + TDOA_j, distances[j])]
             kugel_i = Kugeln(radius=d1, x=x0[j], y=y0[j], z=z0[j])
             kugel_i.coordinaten()
+            d2 = [np.clip(d, d, distances[j])]
+
 
 
             #r1 = np.clip(d, d + TDOA_dist[0], r[0])
@@ -440,6 +363,7 @@ if plot_trilateration_spheresIntersection_circles:
             #circle23(radius=r4)
             #circle24(radius=r5)
             #circle34(radius=r6)
+
             #print("\r d = : " + str(d), end="\n")
             #print("\r Tower 0 radius r0 = : " + str(d0), end="\n")
             #print("\r Tower 1 radius r1 = : " + str(d1 + TDOA_dist1), end="\n")
