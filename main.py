@@ -192,7 +192,6 @@ if plot_trilateration_spheresIntersection_circles:
         system = sy.Matrix(exprs)
 
         # set the initial solution for the numerical method
-        #initial_solution = (x0[first_tower], y0[first_tower], z0[first_tower])
         initial_solution = (50, 50, 50)
         # Solve the system of equations for x, y and z coordinates
         solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=50, verify=False, rational=True)
@@ -205,6 +204,7 @@ if plot_trilateration_spheresIntersection_circles:
     solveEquations()
 
     def circles(radius_0, radius):
+
         theta, te = np.linspace(0, 2 * np.pi, 80), np.linspace(0, 2 * np.pi, 80)
         first_tower = int(np.argmin(rec_times))
         dx, dy, dz = [], [], []
@@ -226,12 +226,12 @@ if plot_trilateration_spheresIntersection_circles:
                 return 0
 
         for i in [x for x in range(towers.shape[0]) if x != first_tower]:
-            if np.sqrt(dx[i]**2 + dy[i]**2 +
-                       dz[i]**2) <= (disti[first_tower] + disti[i]):
-                X_0 = (dx[i]**2 + dy[i]**2 + dz[i]**2 + disti[first_tower]**2 - disti[i]**2) / 2*disti[i]*np.sqrt(
-                    (dx[i]**2 + dy[i]**2 + dz[i]**2))
-                coord_0 = sphereCircle(radius_0, np.pi - math.atan2(dz[i], np.sqrt(dx[i]**2 + dy[i]**2)), math.atan2(dy[i], dx[i]),
-                                    np.arccos(X_0), te)
+            if np.sqrt(dx[i]**2 + dy[i]**2 + dz[i]**2) <= (disti[first_tower] + disti[i]):
+                X_0 = (dx[i]**2 + dy[i]**2 + dz[i]**2 + disti[first_tower]**2 - disti[i]**2) /(
+                      2*disti[i]*np.sqrt((dx[i]**2 + dy[i]**2 + dz[i]**2)))
+                coord_0 = sphereCircle(radius_0, 0, math.atan2(dy[i], dx[i]), np.arccos(X_0), theta)
+                #coord_0 = sphereCircle(radius_0, math.atan2(dz[i], np.sqrt(dy[i] ** 2 + dx[i] ** 2)),
+                #                       math.atan2(dy[i], dx[i]), np.arccos(X_0), theta)
                 array_2d = np.array(coord_0)
                 Zahl = [dx[first_tower], dy[first_tower], dz[first_tower]]
                 array_1d = np.array(Zahl)
@@ -351,7 +351,6 @@ if plot_trilateration_spheresIntersection_circles:
             d1 = [np.clip(d, d + TDOA_j, distances[j])]
             kugel_i = Kugeln(radius=d1, x=x0[j], y=y0[j], z=z0[j])
             kugel_i.coordinaten()
-            d2 = [np.clip(d, d, distances[j])]
 
 
 
