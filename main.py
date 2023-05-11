@@ -203,7 +203,7 @@ if plot_trilateration_spheresIntersection_circles:
         print(f'Trilateration_3D location is: {posi}')
     solveEquations()
 
-    def circles(radius_0, radius):
+    def circles(radius_0):
 
         theta, te = np.linspace(0, 2 * np.pi, 80), np.linspace(0, 2 * np.pi, 80)
         first_tower = int(np.argmin(rec_times))
@@ -236,22 +236,22 @@ if plot_trilateration_spheresIntersection_circles:
                 Zahl = [dx[first_tower], dy[first_tower], dz[first_tower]]
                 array_1d = np.array(Zahl)
                 coordinats_0 = array_2d + array_1d[:, np.newaxis]
-                #plot_circle_0 = ax.plot(
-                #    coordinats_0[0], coordinats_0[1], coordinats_0[2], color='g')
+                plot_circle_0 = ax.plot(
+                    coordinats_0[0], coordinats_0[1], coordinats_0[2], color='g')
 
             for j in [y for y in range(i, towers.shape[0]) if y != first_tower and y != i]:
                 if np.sqrt((dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2 + (dz[j] - dz[i]) ** 2) <= (disti[j] + disti[i]):
                     X = 2 * np.sqrt(((dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2 +
                                      (dz[j] - dz[i]) ** 2)) * disti[i] / \
-                        ((dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2 +
-                         (dz[j] - dz[i]) ** 2 + disti[j] ** 2 - disti[i] ** 2)
-                    coord = sphereCircle(radius, np.pi -
-                                         math.atan2(dz[i] - dz[first_tower], np.sqrt(
-                                             (dx[first_tower] - dx[i]) ** 2 + (dy[first_tower] - dy[i]) ** 2)),
-                                         (math.atan2(dy[first_tower] - dy[i], dx[first_tower] - dx[i])),
+                        ((dx[i] - dx[j]) ** 2 + (dy[i] - dy[j]) ** 2 +
+                         (dz[i] - dz[j]) ** 2 + disti[i] ** 2 - disti[j] ** 2)
+                    coord = sphereCircle(disti[i],
+                                         math.atan2(dz[j] - dz[i], np.sqrt(
+                                             (dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2)),
+                                         (math.atan2(dy[j] - dy[i], dx[j] - dx[i])),
                                          asec(X), te)
                     array_2d = np.array(coord)
-                    Zahl = [dx[i] + dx[j], dy[i] + dy[j], dz[i] + dz[j]]
+                    Zahl = [dx[i] + dx[first_tower], dy[i] + dy[first_tower], dz[i] + dz[first_tower]]
                     array_1d = np.array(Zahl)
                     coordinats = array_2d + array_1d[:, np.newaxis]
                     plot_circle = ax.plot(
@@ -343,7 +343,7 @@ if plot_trilateration_spheresIntersection_circles:
         d = i / n_frames * max_d
         first_tower = int(np.argmin(rec_times))
         d0 = [np.clip(d, d, distances[first_tower])]
-        circles(radius_0=d0, radius=d)
+        circles(radius_0=d0)
         kugel_0 = Kugeln(radius=d0, x=x0[first_tower], y=y0[first_tower], z=z0[first_tower])
         kugel_0.coordinaten()
         for j in [x for x in range(towers.shape[0]) if x != first_tower]:
@@ -352,9 +352,6 @@ if plot_trilateration_spheresIntersection_circles:
             kugel_i = Kugeln(radius=d1, x=x0[j], y=y0[j], z=z0[j])
             kugel_i.coordinaten()
 
-            for i in [y for y in range(towers.shape[0]) if y != first_tower and y != j]:
-                d2 = [np.clip(d, d, distances[i])]
-                circles(radius_0=0, radius=d2)
 
 
 
