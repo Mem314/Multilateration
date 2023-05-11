@@ -295,7 +295,7 @@ if plot_trilateration_spheresIntersection_circles:
             TDOA.append(tdoa)
             TDOA_dist.append(v * tdoa)
 
-    n_frames = 30
+    n_frames = 25
     max_seconds = 1e-4
     max_d = 1e5
 
@@ -307,6 +307,7 @@ if plot_trilateration_spheresIntersection_circles:
 
         ax.collections.clear()
         plot_towers()
+
         v_vec = ax.quiver(tx[0] + Radius, tx[1], tx[2], 1, 0, 0,
                           length=10000, normalize=True, fc='k', ec='k')
         v_ann.set_position((tx[0] + 4e3 + Radius, tx[1] + 4e3))
@@ -319,6 +320,7 @@ if plot_trilateration_spheresIntersection_circles:
             print('Tower {}: t = {}, rec_times[{}] = {}'.format(u, t, u, rec_times[u]))
             if t >= rec_times[u]:
                 tower_text[u].set_text('Tower {} received at t = {} s'.format(u, rec_times[u]))
+
 
 
     def animate2(i):
@@ -335,10 +337,9 @@ if plot_trilateration_spheresIntersection_circles:
         ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
         ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
         ax.axis('off')
-
+        ax.view_init(elev=45, azim=i/2)
         plot_lines()
         plot_towers()
-
 
         d = i / n_frames * max_d
         first_tower = int(np.argmin(rec_times))
@@ -360,8 +361,10 @@ if plot_trilateration_spheresIntersection_circles:
             #print("\r Tower 3 radius r3 = : " + str(d3 + TDOA_dist3), end="\n")
 
 
+
     anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
+    #anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=60)
     ## plt.close()
     ## Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
     plt.show()
@@ -374,7 +377,7 @@ if plot_trilateration_spheresIntersection_circles:
 
     anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
     # anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    # anim_2.save('/home/mohammed/Animationen/TDOA.gif', writer='imagemagick', fps=60)
+    #anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=60)
     # plt.close()
     # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
     plt.show()
