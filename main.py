@@ -203,7 +203,12 @@ if plot_trilateration_spheresIntersection_circles:
         print(f'Trilateration_3D location is: {posi}')
     solveEquations()
 
-    def circles(radius_0):
+    def circles(radius_0, radius):
+        def asec(x):
+            if x < -1 or x > 1:
+                return math.acos(1 / x)
+            else:
+                return 0
 
         theta, te = np.linspace(0, 2 * np.pi, 80), np.linspace(0, 2 * np.pi, 80)
         first_tower = int(np.argmin(rec_times))
@@ -218,12 +223,6 @@ if plot_trilateration_spheresIntersection_circles:
             dy.insert(i, y0[i] - y0[first_tower])
             dz.insert(i, z0[i] - z0[first_tower])
             disti.insert(i, distances[i])
-
-        def asec(x):
-            if x < -1 or x > 1:
-                return math.acos(1 / x)
-            else:
-                return 0
 
         for i in [x for x in range(towers.shape[0]) if x != first_tower]:
             if np.sqrt(dx[i]**2 + dy[i]**2 + dz[i]**2) <= (disti[first_tower] + disti[i]):
@@ -245,7 +244,8 @@ if plot_trilateration_spheresIntersection_circles:
                                      (dz[j] - dz[i]) ** 2)) * disti[i] / \
                         ((dx[i] - dx[j]) ** 2 + (dy[i] - dy[j]) ** 2 +
                          (dz[i] - dz[j]) ** 2 + disti[i] ** 2 - disti[j] ** 2)
-                    coord = sphereCircle(disti[i],
+                    radius_1 = np.clip(radius, radius, disti[i])
+                    coord = sphereCircle(radius_1,
                                          math.atan2(dz[j] - dz[i], np.sqrt(
                                              (dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2)),
                                          (math.atan2(dy[j] - dy[i], dx[j] - dx[i])),
@@ -295,7 +295,7 @@ if plot_trilateration_spheresIntersection_circles:
             TDOA.append(tdoa)
             TDOA_dist.append(v * tdoa)
 
-    n_frames = 10
+    n_frames = 30
     max_seconds = 1e-4
     max_d = 1e5
 
@@ -316,7 +316,7 @@ if plot_trilateration_spheresIntersection_circles:
         cur_time.set_text('t = {:.2E} s'.format(t))
 
         for u in range(num_towers):
-            print('Tower {}: t = {}, rec_times[u] = {}'.format(u, t, rec_times[u]))
+            print('Tower {}: t = {}, rec_times[{}] = {}'.format(u, t, u, rec_times[u]))
             if t >= rec_times[u]:
                 tower_text[u].set_text('Tower {} received at t = {} s'.format(u, rec_times[u]))
 
@@ -343,7 +343,8 @@ if plot_trilateration_spheresIntersection_circles:
         d = i / n_frames * max_d
         first_tower = int(np.argmin(rec_times))
         d0 = [np.clip(d, d, distances[first_tower])]
-        circles(radius_0=d0)
+
+        circles(radius_0=d0, radius=d)
         kugel_0 = Kugeln(radius=d0, x=x0[first_tower], y=y0[first_tower], z=z0[first_tower])
         kugel_0.coordinaten()
         for j in [x for x in range(towers.shape[0]) if x != first_tower]:
@@ -352,10 +353,7 @@ if plot_trilateration_spheresIntersection_circles:
             kugel_i = Kugeln(radius=d1, x=x0[j], y=y0[j], z=z0[j])
             kugel_i.coordinaten()
 
-
-
-
-            #print("\r d = : " + str(d), end="\n")
+            print("\r d = : " + str(d), end="\n")
             #print("\r Tower 0 radius r0 = : " + str(d0), end="\n")
             #print("\r Tower 1 radius r1 = : " + str(d1 + TDOA_dist1), end="\n")
             #print("\r Tower 2 radius r2 = : " + str(d2 + TDOA_dist2), end="\n")
