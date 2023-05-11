@@ -203,6 +203,7 @@ if plot_trilateration_spheresIntersection_circles:
         print(f'Trilateration_3D location is: {posi}')
     solveEquations()
 
+
     def circles(radius_0, radius):
         def asec(x):
             if x < -1 or x > 1:
@@ -260,7 +261,6 @@ if plot_trilateration_spheresIntersection_circles:
                     plot_circle = []
             else:
                 plot_circle_0 = []
-
 
 
     def plot_towers():
@@ -362,12 +362,10 @@ if plot_trilateration_spheresIntersection_circles:
 
 
 
-    anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
+    #anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    #anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=60)
-    ## plt.close()
-    ## Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
-    plt.show()
+    ##anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=60)
+    #plt.show()
 
     fig = plt.figure(figsize=(14, 8))
     ax = fig.add_subplot(projection='3d')
@@ -375,12 +373,10 @@ if plot_trilateration_spheresIntersection_circles:
     ax.axis('off')
 
 
-    anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
-    # anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    #anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=60)
-    # plt.close()
-    # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
-    plt.show()
+    #anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
+    ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
+    ##anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=60)
+    #plt.show()
 
 """
 def plot_trilateration_Intersection():
