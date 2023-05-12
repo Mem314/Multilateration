@@ -7,15 +7,12 @@ import sympy as sy
 import math
 import sys
 import time
-from trilateration import sphereCircle, Trilateration_3D
+from trilateration import Trilateration_3D
 from matplotlib.animation import FuncAnimation
 from IPython.display import Image
 from IPython.display import display, clear_output
 from typing import Any
 from dataclasses import dataclass
-
-def ggg():
-    pass
 
 # How many towers. All towers receive the transmission.
 num_towers = 4
@@ -131,21 +128,29 @@ ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
 
 if plot_trilateration_spheresIntersection_circles:
 
+    def plot_towers():
+        for k in range(towers.shape[0]):
+            x = towers[k][0]
+            y = towers[k][1]
+            z = towers[k][2]
+            ax.text3D(x, y, z, 'Tower ' + str(k))
+            ax.text3D(tx[0], tx[1], tx[2], 'Tx')
+            ax.scatter3D(x, y, z, color="b", s=10)
+            ax.scatter3D(tx[0], tx[1], tx[2], color="g", s=10)
+
+
     def plot_lines():
         for i in range(num_towers):
             if plot_lines_to_tx:
-                # line between transmitter and tx
-                pl1 = ax.plot3D((towers[i][0], tx[0]),
-                          (towers[i][1], tx[1]),
-                          (towers[i][2], tx[2]))
-
+                # arrow between transmitter and tx
+                ax.quiver(tx[0], tx[1], tx[2], towers[i][0] - tx[0], towers[i][1] - tx[1], towers[i][2] - tx[2],
+                          arrow_length_ratio=0.2)
             for j in range(i + 1, num_towers):
                 if plot_lines_between_towers:
                     # Line between towers
                     pl2 = ax.plot3D((towers[i][0], towers[j][0]),
                               (towers[i][1], towers[j][1]),
-                              (towers[i][2], towers[j][2]))
-
+                              (towers[i][2], towers[j][2]), color='b')
 
 
     # Kugeln
@@ -166,6 +171,24 @@ if plot_trilateration_spheresIntersection_circles:
                 X, Y, Z, rstride=2, cstride=2, cmap=cm.cividis,
                 linewidth=0, antialiased=False, alpha=0.2)
             return plot
+
+
+    def sphereCircle(r, psi, zeta, alpha, t):
+        """
+        3D circle on a sphere with  r
+        :param r: radius of the Circle
+        :param psi:  rotation around y-axis
+        :param zeta: rotation around z-axis
+        :param alpha: angular radius of the circle
+        :param t: parameter (0-2*Pi)
+        :return:
+        """
+        x = r * (np.cos(alpha) * np.cos(zeta) * np.cos(psi) +
+                 np.sin(alpha) * (-np.sin(t) * np.sin(zeta) + np.cos(t) * np.cos(zeta) * np.sin(psi)))
+        y = r * (np.cos(zeta) * np.sin(alpha) * np.sin(t) +
+                 np.sin(zeta) * (np.cos(alpha) * np.cos(psi) + np.cos(t) * np.sin(alpha) * np.sin(psi)))
+        z = r * (-np.cos(t) * np.cos(psi) * np.sin(alpha) + np.cos(alpha) * np.sin(psi))
+        return [x, y, z]
 
     def solveEquations():
         x, y, z = sy.symbols("x y z")
@@ -202,6 +225,9 @@ if plot_trilateration_spheresIntersection_circles:
             posi[2] = -posi[2]
         print(f'Trilateration_3D location is: {posi}')
     solveEquations()
+
+
+
 
 
     def circles(radius_0, radius):
@@ -263,15 +289,6 @@ if plot_trilateration_spheresIntersection_circles:
                 plot_circle_0 = []
 
 
-    def plot_towers():
-        for k in range(towers.shape[0]):
-            x = towers[k][0]
-            y = towers[k][1]
-            z = towers[k][2]
-            ax.text3D(x, y, z, 'Tower ' + str(k))
-            ax.text3D(tx[0], tx[1], tx[2], 'Tx')
-            ax.scatter3D(x, y, z, color="b", s=10)
-            ax.scatter3D(tx[0], tx[1], tx[2], color="g", s=10)
 
     # Annotations, to be updated during animation
     l = 40e3
@@ -307,6 +324,7 @@ if plot_trilateration_spheresIntersection_circles:
 
         ax.collections.clear()
         plot_towers()
+        plot_lines()
 
         v_vec = ax.quiver(tx[0] + Radius, tx[1], tx[2], 1, 0, 0,
                           length=10000, normalize=True, fc='k', ec='k')

@@ -6,12 +6,12 @@ from matplotlib import cm
 import math
 import sympy as sy
 
-np.seterr(divide='ignore', invalid='ignore')
 
-#abstand = [[1.5, 1.8, 2.0, 3.08], [-3, -2.2, 3.5, 5.1], [-2.3, 1.4, -2.7, 3.81], [3.3, -2.5, -3.2, 5.2]]
+abstand = [[1.5, 1.8, 2.0, 3.08], [-3, -2.2, 3.5, 5.1], [-2.3, 1.4, -2.7, 3.81], [3.3, -2.5, -3.2, 5.2]]
 #abstand = [[-0.5,0.5,0,1],[-1,0.5,0,1],[-1,-0.5,0,1],[-1.5,0.2,0,1]]
 #abstand = [[0,0,0,1],[2,0,0,1],[1,1,0,1],[1,-1,0,1]]
-abstand = [[-1,0,0,1],[1,0,0,1],[0,1,0,1],[0,-1,0,1]]
+#abstand = [[-1,0,0,1],[1,0,0,1],[0,1,0,1],[0,-1,0,1]]
+distances = [3.08, 5.1, 3.81, 5.2]
 
 x0, y0, z0 = [], [], []
 for i in range(0, len(abstand)):
@@ -32,27 +32,6 @@ for i in range(0, len(abstand)-1):
 r = []
 for i in range(0, len(abstand)):
     r.__iadd__([abstand[i][3]])
-
-def sphereCircle(r, psi, zeta, alpha, t):
-    """
-    3D circle on a sphere with  r
-    :param r: radius of the Circle
-    :param psi:  rotation around y-axis
-    :param zeta: rotation around z-axis
-    :param alpha: angular radius of the circle
-    :param t: parameter (0-2*Pi)
-    :return:
-    """
-    x = r*(np.cos(alpha)*np.cos(zeta)*np.cos(psi) +
-           np.sin(alpha)*(-np.sin(t)*np.sin(zeta)+np.cos(t)*np.cos(zeta)*np.sin(psi)))
-    y = r*(np.cos(zeta)*np.sin(alpha)*np.sin(t) +
-           np.sin(zeta)*(np.cos(alpha)*np.cos(psi)+np.cos(t)*np.sin(alpha)*np.sin(psi)))
-    z = r*(-np.cos(t)*np.cos(psi)*np.sin(alpha) + np.cos(alpha)*np.sin(psi))
-    return [x, y, z]
-
-
-# Treffpunkt
-#point = ax.scatter3D(posi[0], posi[1], posi[2])
 
 
 def Trilateration_3D(abstand, distances):
@@ -128,7 +107,10 @@ if __name__ == "__main__":
     for p in range(0, len(abstand)):
         print(abstand[p])
 
+
     # Call the function and compute the location
-    print(abstand[2])
-    posi = Trilateration_3D(abstand)
-    print("The location of the point is: " + str(posi))
+    posi = Trilateration_3D(abstand, distances)
+    decimal_places = 10
+    formatted_values = [("{:.{}f}".format(x, decimal_places)) for x in posi]
+    formatted_string = ", ".join(formatted_values)
+    print("The locations of the points are:", formatted_string)
