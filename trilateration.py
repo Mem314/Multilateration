@@ -7,11 +7,11 @@ import math
 import sympy as sy
 
 
-abstand = [[1.5, 1.8, 2.0, 3.08], [-3, -2.2, 3.5, 5.1], [-2.3, 1.4, -2.7, 3.81], [3.3, -2.5, -3.2, 5.2]]
+#abstand = [[1.5, 1.8, 2.0, 3.08], [-3, -2.2, 3.5, 5.1], [-2.3, 1.4, -2.7, 3.81], [3.3, -2.5, -3.2, 5.2]]
 #abstand = [[-0.5,0.5,0,1],[-1,0.5,0,1],[-1,-0.5,0,1],[-1.5,0.2,0,1]]
-#abstand = [[0,0,0,1],[2,0,0,1],[1,1,0,1],[1,-1,0,1]]
+abstand = [[0,0,0,1],[2,0,0,1],[1,1,0,1],[1,-1,0,1]]
 #abstand = [[-1,0,0,1],[1,0,0,1],[0,1,0,1],[0,-1,0,1]]
-distances = [3.08, 5.1, 3.81, 5.2]
+distances = [1, 1, 1, 1]
 
 x0, y0, z0 = [], [], []
 for i in range(0, len(abstand)):
@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
     # Call the function and compute the location
     posi = Trilateration_3D(abstand, distances)
-    decimal_places = 10
+    decimal_places = 12
     formatted_values = [("{:.{}f}".format(x, decimal_places)) for x in posi]
     formatted_string = ", ".join(formatted_values)
     print("The locations of the points are:", formatted_string)

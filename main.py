@@ -64,6 +64,7 @@ plot_lines_to_tx = True
 
 # Generate towers with x and y coordinates.
 # for tower i: x, y = towers[i][0], towers[i][1]
+
 towersss = (np.random.rand(num_towers, 3) - 0.5) * rx_square_side
 array_2dd = np.array(towersss)
 zahl1 = np.repeat(1, num_towers)
@@ -73,12 +74,17 @@ zahl = [1, 1, 0]
 array_2d = np.array(towerss)
 array_1d = np.array(zahl)
 towers = array_2d * array_1d[np.newaxis, :]
+#towers = [[0,0,0],[2,0,0],[1,1,0],[1,-1,0]]
+#towers = np.array(towers)
 print('towers:\n', towers)
 
 # location of transmitting device with tx[0] being x and tx[1] being y.
 tx = (np.random.rand(3) - [0.5, 0.5, -1]) * tx_square_side
-
-print('tx:', tx)
+#tx = np.array([1,1,1,1])
+decimal_p = 20
+formatted_values_tx = [("{:.{}f}".format(x, decimal_p)) for x in tx]
+formatted_string_tx = ", ".join(formatted_values_tx)
+print("The locations of tx is:", formatted_string_tx)
 
 # Distances from each tower to the transmitting device,
 # simply triangle hypotenuse.
@@ -215,19 +221,35 @@ if plot_trilateration_spheresIntersection_circles:
         system = sy.Matrix(exprs)
 
         # set the initial solution for the numerical method
-        initial_solution = (50, 50, 50)
+        decimal_places = decimal_p
+        initial_value = 50
+        initial_solution = (initial_value, initial_value, initial_value)
         # Solve the system of equations for x, y and z coordinates
-        solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=50, verify=False, rational=True)
+        solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=10, verify=False, rational=True,
+                              prec=decimal_places)
 
-        print(f'sy.nsolve locations is: {solutions}')
+
+        formatted_values_sy = [("{:.{}f}".format(x, decimal_places)) for x in solutions]
+        formatted_string_sy = ", ".join(formatted_values_sy)
+        print("sy.nsolve locations is:", formatted_string_sy)
         posi = Trilateration_3D(towers, distances)
         if posi[2] < 0:
             posi[2] = -posi[2]
-        print(f'Trilateration_3D location is: {posi}')
+        formatted_values_posi = [("{:.{}f}".format(x, decimal_places)) for x in posi]
+        formatted_string_posi = ", ".join(formatted_values_posi)
+        print("The locations of the points are:", formatted_string_posi)
+
+        # Calculate the average error
+        original_locations = np.array(tx)
+        sy_locations = np.array(solutions)
+        sy_locations = sy_locations.reshape(posi.shape)
+        absolute_difference_sy = np.abs(original_locations - sy_locations)
+        absolute_difference_tri = np.abs(original_locations - posi)
+        average_error_sy = np.mean(absolute_difference_sy)
+        average_error_tri = np.mean(absolute_difference_tri)
+        print("Average error sy.nsolve:", average_error_sy)
+        print("Average error Trilatation:", average_error_tri)
     solveEquations()
-
-
-
 
 
     def circles(radius_0, radius):
