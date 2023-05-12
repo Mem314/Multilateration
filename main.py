@@ -221,11 +221,11 @@ if plot_trilateration_spheresIntersection_circles:
         system = sy.Matrix(exprs)
 
         # set the initial solution for the numerical method
-        decimal_places = decimal_p
+        decimal_places = 13
         initial_value = 50
         initial_solution = (initial_value, initial_value, initial_value)
         # Solve the system of equations for x, y and z coordinates
-        solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=10, verify=False, rational=True,
+        solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=50, verify=False, rational=True,
                               prec=decimal_places)
 
 
