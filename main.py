@@ -15,7 +15,7 @@ from typing import Any
 from dataclasses import dataclass
 
 # How many towers. All towers receive the transmission.
-num_towers = 4
+num_towers = 8
 
 # Metre length of a square containing the transmitting
 # device, centred around (x, y) = (0, 0). Device will be randomly placed
@@ -232,12 +232,18 @@ if plot_trilateration_spheresIntersection_circles:
         formatted_values_sy = [("{:.{}f}".format(x, decimal_places)) for x in solutions]
         formatted_string_sy = ", ".join(formatted_values_sy)
         print("sy.nsolve locations is:", formatted_string_sy)
-        posi = Trilateration_3D(towers, distances)
-        if posi[2] < 0:
-            posi[2] = -posi[2]
-        formatted_values_posi = [("{:.{}f}".format(x, decimal_places)) for x in posi]
-        formatted_string_posi = ", ".join(formatted_values_posi)
-        print("The locations of the points are:", formatted_string_posi)
+        posii = []
+        for p in range(len(towers) - 3):
+            posii.append(Trilateration_3D(towers, distances))
+        posi = [list(pos) for pos in posii]
+        decimal_places = 12
+        formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos]))) for pos in
+                            posi]
+
+        print("The locations of the points are:", ", ".join(formatted_values))
+        #if posi[2] < 0:
+        #    posi[2] = -posi[2]
+
 
         # Calculate the average error
         original_locations = np.array(tx)
@@ -360,7 +366,6 @@ if plot_trilateration_spheresIntersection_circles:
             print('Tower {}: t = {}, rec_times[{}] = {}'.format(u, t, u, rec_times[u]))
             if t >= rec_times[u]:
                 tower_text[u].set_text('Tower {} received at t = {} s'.format(u, rec_times[u]))
-
 
 
     def animate2(i):

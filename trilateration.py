@@ -9,33 +9,13 @@ import sympy as sy
 
 #abstand = [[1.5, 1.8, 2.0, 3.08], [-3, -2.2, 3.5, 5.1], [-2.3, 1.4, -2.7, 3.81], [3.3, -2.5, -3.2, 5.2]]
 #abstand = [[-0.5,0.5,0,1],[-1,0.5,0,1],[-1,-0.5,0,1],[-1.5,0.2,0,1]]
-abstand = [[0,0,0,1],[2,0,0,1],[1,1,0,1],[1,-1,0,1]]
-#abstand = [[-1,0,0,1],[1,0,0,1],[0,1,0,1],[0,-1,0,1]]
-distances = [1, 1, 1, 1]
-
-x0, y0, z0 = [], [], []
-for i in range(0, len(abstand)):
-    x0.__iadd__([abstand[i][0]])
-    y0.__iadd__([abstand[i][1]])
-    z0.__iadd__([abstand[i][2]])
-
-dx, dy, dz = [], [], []
-for i in range(1, len(abstand)):
-    dx.__iadd__([abstand[i][0] - abstand[0][0]])
-    dy.__iadd__([abstand[i][1] - abstand[0][1]])
-    dz.__iadd__([abstand[i][2] - abstand[0][2]])
-
-dr = []
-for i in range(0, len(abstand)-1):
-    dr.__iadd__([np.sqrt(dx[i]**2 + dy[i]**2 + dz[i]**2)])
-
-r = []
-for i in range(0, len(abstand)):
-    r.__iadd__([abstand[i][3]])
+#abstand = [[0,0,0,1],[2,0,0,1],[1,1,0,1],[1,-1,0,1]]
+abstand = [[0,0,0],[2,0,0],[1,1,0],[1,-1,0],[0,0,0],[-2,0,0],[-1,1,0],[-1,-1,0]]
+distances = [1,1,1,1,1,1,1,1,1]
 
 
 def Trilateration_3D(abstand, distances):
-    '''
+    """
     Dieses Programm implementiert die Trilateration in 3 Dimensionen.
     Ziel ist es, die Position eines Punktes (posi) im Raum auf der Grundlage der
     Position (Koordinaten) von P_i anderen Punkten im Raum und der Entfernung
@@ -52,55 +32,41 @@ def Trilateration_3D(abstand, distances):
     Hier handelt es sich um eine kartesische 'true-range-Multilateration'.
     Durch den ersten Punkt und mithilfe des Pythagoras-Theorems ist man in der Lage,
     die Abstände zwischen posi und Mittelpunkt der Kugeln zu berechnen.
-    '''
+    """
 
-    # Koordinaten: p1 = [x, y, z].
-    p1 = np.array(abstand[0][:3])
-    p2 = np.array(abstand[1][:3])
-    p3 = np.array(abstand[2][:3])
-    p4 = np.array(abstand[3][:3])
+    # coordinates: p1 = [x, y, z] and radii.
+    p = []
+    for i in range(len(abstand)):
+        p.append(np.array(abstand[i][:3]))
+    r = np.array(distances)
+    # the unit vector in the direction from p1 to p2.
+    d, i, j, e_x, e_y, e_z = [], [], [], [], [], []
+    for k in range(len(abstand)-3):
+        d.append(np.linalg.norm(p[k + 1] - p[k]))
+        # projection of the vector from p3 to p1 onto e_x.
+        e_x.append((p[k + 1] - p[k]) / np.linalg.norm(p[k + 1] - p[k]))
+        i.append(np.dot(e_x[k], (p[k + 2] - p[k])))
+        e_y.append((p[k + 2] - p[k] - (i[k] * e_x[k])) / (np.linalg.norm(p[k + 2] - p[k] - (i[k] * e_x[k]))))
+        j.append(np.dot(e_y[k], (p[k + 2] - p[k])))
+        e_z.append(np.cross(e_x[k], e_y[k]))
 
-    # Radien: r1 ist Radius von p1.
-    r1 = distances[0]
-    r2 = distances[1]
-    r3 = distances[2]
-    r4 = distances[3]
+    x, y, z1, z2 = [], [], [], []
+    for k in range(len(abstand)-3):
+        x.append(((r[k] ** 2) - (r[k + 1] ** 2) + (d[k] ** 2)) / (2 * d[k]))
+        y.append((((r[k] ** 2) - (r[k + 2] ** 2) + (i[k] ** 2) + (j[k] ** 2)) / (2 * j[k])) - ((i[k] / j[k]) * (x[k])))
+        z1.append(np.sqrt(np.abs(r[k] ** 2 - x[k] ** 2 - y[k] ** 2)))
+        z2.append(z1[k] * (-1))
 
-    # Einheitsvektor des ersten Punktes.
-    e_x = (p2 - p1) / np.linalg.norm(p2 - p1)
-
-    # x koordinate des dritten Punktes.
-    i = np.dot(e_x, (p3 - p1))
-
-    # Einheitsvektor des zweiten und dritten Punkt.
-    e_y = (p3 - p1 - (i * e_x)) / (np.linalg.norm(p3 - p1 - (i * e_x)))
-    e_z = np.cross(e_x, e_y)
-
-    # Abstand von den ersten zwei Punkten.
-    d = np.linalg.norm(p2 - p1)
-
-    # y koordinate des dritten Punktes.
-    j = np.dot(e_y, (p3 - p1))
-
-    # Die Koordinaten des zu bestimmenden Punktes, wobei für z zwei Lsgen gibt.
-    x = ((r1 ** 2) - (r2 ** 2) + (d ** 2)) / (2 * d)
-    y = (((r1 ** 2) - (r3 ** 2) + (i ** 2) + (j ** 2)) / (2 * j)) - ((i / j) * (x))
-    z1 = np.sqrt(np.abs(r1 ** 2 - x ** 2 - y ** 2))
-    z2 = z1 * (-1)
-
-    # Ansätze für die Lsgen. Diese sind abhängig von der Anzahl der z-Lsgen.
-    ans1 = p1 + (x * e_x) + (y * e_y) + (z1 * e_z)
-    ans2 = p1 + (x * e_x) + (y * e_y) + (z2 * e_z)
-
-    # Die Lösungen verbinden mit dem 4.ten Punkt.
-    dist1 = np.linalg.norm(p4 - ans1)
-    dist2 = np.linalg.norm(p4 - ans2)
-
-    # Ausgabe der richtigen Lsg.
-    if np.abs(r4 - dist1) < np.abs(r4 - dist2):
-        return ans1
-    else:
-        return ans2
+    ans1, ans2, dist1, dist2 = [], [], [], []
+    for k in range(len(abstand) - 3):
+        ans1.append(p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k]))
+        ans2.append(p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k]))
+        dist1.append(np.linalg.norm(p[k + 3] - ans1[k]))
+        dist2.append(np.linalg.norm(p[k + 3] - ans2[k]))
+        if np.abs(r[k + 3] - dist1[k]) < np.abs(r[k + 3] - dist2[k]):
+            return ans1[k]
+        else:
+            return ans2[k]
 if __name__ == "__main__":
     # Print out the data
     print("The input four points and distances, in the format of [x, y, z, d], are:")
@@ -109,8 +75,19 @@ if __name__ == "__main__":
 
 
     # Call the function and compute the location
-    posi = Trilateration_3D(abstand, distances)
+    posii = []
+    for p in range(len(abstand)-3):
+        posii.append(Trilateration_3D(abstand, distances))
+    posi = [list(pos) for pos in posii]
     decimal_places = 12
-    formatted_values = [("{:.{}f}".format(x, decimal_places)) for x in posi]
-    formatted_string = ", ".join(formatted_values)
-    print("The locations of the points are:", formatted_string)
+    formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos]))) for pos in posi]
+
+    print("The locations of the points are:", ", ".join(formatted_values))
+    # Calculate the mean of the points
+    points = [np.array(eval(point)) for point in formatted_values]
+    mean_point = np.round(np.mean(points, axis=0), decimal_places)
+    print("The mean location of the points is:", mean_point.tolist())
+
+    mean_point = np.mean(points, axis=0)
+    formatted_mean_point = ["{:.{}f}".format(coord, decimal_places) for coord in mean_point]
+    print("The mean location of the points is:", formatted_mean_point)
