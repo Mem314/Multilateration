@@ -7,11 +7,11 @@ import math
 import sympy as sy
 
 
-#abstand = [[1.5, 1.8, 2.0, 3.08], [-3, -2.2, 3.5, 5.1], [-2.3, 1.4, -2.7, 3.81], [3.3, -2.5, -3.2, 5.2]]
+abstand = [[1.5, 1.8, 2.0, 3.08], [-3, -2.2, 3.5, 5.1], [-2.3, 1.4, -2.7, 3.81], [3.3, -2.5, -3.2, 5.2], [1.5,1.1,1.2]]
 #abstand = [[-0.5,0.5,0,1],[-1,0.5,0,1],[-1,-0.5,0,1],[-1.5,0.2,0,1]]
 #abstand = [[0,0,0,1],[2,0,0,1],[1,1,0,1],[1,-1,0,1]]
-abstand = [[0,0,0],[2,0,0],[1,1,0],[1,-1,0],[0,0,0],[-2,0,0],[-1,1,0],[-1,-1,0]]
-distances = [1,1,1,1,1,1,1,1,1]
+#abstand = [[0,0,0],[2,0,0],[1,1,0],[1,-1,0],[0,0,0],[-2,0,0],[-1,1,0],[-1,-1,0]]
+distances = [3.08,5.1,3.81,5.2,1]
 
 
 def Trilateration_3D(abstand, distances):
@@ -51,10 +51,12 @@ def Trilateration_3D(abstand, distances):
         e_z.append(np.cross(e_x[k], e_y[k]))
 
     x, y, z1, z2 = [], [], [], []
-    for k in range(len(abstand)-3):
-        x.append(((r[k] ** 2) - (r[k + 1] ** 2) + (d[k] ** 2)) / (2 * d[k]))
-        y.append((((r[k] ** 2) - (r[k + 2] ** 2) + (i[k] ** 2) + (j[k] ** 2)) / (2 * j[k])) - ((i[k] / j[k]) * (x[k])))
-        z1.append(np.sqrt(np.abs(r[k] ** 2 - x[k] ** 2 - y[k] ** 2)))
+    for k in range(len(abstand) - 3):
+        x_val = ((r[k] ** 2) - (r[k + 1] ** 2) + (d[k] ** 2)) / (2 * d[k])
+        x.append(x_val)
+        y_val = (((r[k] ** 2) - (r[k + 2] ** 2) + (i[k] ** 2) + (j[k] ** 2)) / (2 * j[k])) - ((i[k] / j[k]) * (x_val))
+        y.append(y_val)
+        z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)))
         z2.append(z1[k] * (-1))
 
     ans1, ans2, dist1, dist2 = [], [], [], []
@@ -63,10 +65,16 @@ def Trilateration_3D(abstand, distances):
         ans2.append(p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k]))
         dist1.append(np.linalg.norm(p[k + 3] - ans1[k]))
         dist2.append(np.linalg.norm(p[k + 3] - ans2[k]))
+
+    positions = []
+    for k in range(len(abstand) - 3):
         if np.abs(r[k + 3] - dist1[k]) < np.abs(r[k + 3] - dist2[k]):
-            return ans1[k]
+            positions.append(ans1[k])
         else:
-            return ans2[k]
+            positions.append(ans2[k])
+
+    return positions
+
 if __name__ == "__main__":
     # Print out the data
     print("The input four points and distances, in the format of [x, y, z, d], are:")
@@ -80,14 +88,15 @@ if __name__ == "__main__":
         posii.append(Trilateration_3D(abstand, distances))
     posi = [list(pos) for pos in posii]
     decimal_places = 12
-    formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos]))) for pos in posi]
+    positions = Trilateration_3D(abstand, distances)
+    def format_positions(posi, decimal_places):
+        formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()]))) for
+                            pos in posi]
+        return formatted_values
 
-    print("The locations of the points are:", ", ".join(formatted_values))
-    # Calculate the mean of the points
-    points = [np.array(eval(point)) for point in formatted_values]
-    mean_point = np.round(np.mean(points, axis=0), decimal_places)
-    print("The mean location of the points is:", mean_point.tolist())
+    formatted_positions = format_positions(positions, decimal_places=12)
+    for pos in formatted_positions:
+        print("Position: {}".format(pos))
 
-    mean_point = np.mean(points, axis=0)
-    formatted_mean_point = ["{:.{}f}".format(coord, decimal_places) for coord in mean_point]
-    print("The mean location of the points is:", formatted_mean_point)
+    mean_position = np.mean(positions, axis=0)
+    print("mean of the positions: {}".format(mean_position))
