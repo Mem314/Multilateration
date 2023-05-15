@@ -81,12 +81,6 @@ if __name__ == "__main__":
     for p in range(0, len(abstand)):
         print(abstand[p])
 
-
-    # Call the function and compute the location
-    posii = []
-    for p in range(len(abstand)-3):
-        posii.append(Trilateration_3D(abstand, distances))
-    posi = [list(pos) for pos in posii]
     decimal_places = 12
     positions = Trilateration_3D(abstand, distances)
     def format_positions(posi, decimal_places):

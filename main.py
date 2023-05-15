@@ -232,25 +232,30 @@ if plot_trilateration_spheresIntersection_circles:
         formatted_values_sy = [("{:.{}f}".format(x, decimal_places)) for x in solutions]
         formatted_string_sy = ", ".join(formatted_values_sy)
         print("sy.nsolve locations is:", formatted_string_sy)
-        posii = []
-        for p in range(len(towers) - 3):
-            posii.append(Trilateration_3D(towers, distances))
-        posi = [list(pos) for pos in posii]
-        decimal_places = 12
-        formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos]))) for pos in
-                            posi]
 
-        print("The locations of the points are:", ", ".join(formatted_values))
-        #if posi[2] < 0:
-        #    posi[2] = -posi[2]
+        positions = Trilateration_3D(towers, distances)
 
+        positions_array = np.array(positions)
+        # Check if z coordinate is negative and make it positive
+        if (positions_array[:, 2] < 0).any():
+                positions_array[:, 2] = np.abs(positions_array[:, 2])
+        print(positions_array)
+        def format_positions(posi, decimal_places):
+            formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()])))
+                                for pos in posi]
+            return formatted_values
+        formatted_positions = format_positions(positions_array, decimal_places=12)
+        for pos in formatted_positions:
+            print("Position: {}".format(pos))
+        mean_position = np.mean(positions_array, axis=0)
+        print("mean of the positions: {}".format(mean_position))
 
         # Calculate the average error
         original_locations = np.array(tx)
         sy_locations = np.array(solutions)
-        sy_locations = sy_locations.reshape(posi.shape)
+        sy_locations = sy_locations.reshape(mean_position.shape)
         absolute_difference_sy = np.abs(original_locations - sy_locations)
-        absolute_difference_tri = np.abs(original_locations - posi)
+        absolute_difference_tri = np.abs(original_locations - mean_position)
         average_error_sy = np.mean(absolute_difference_sy)
         average_error_tri = np.mean(absolute_difference_tri)
         print("Average error sy.nsolve:", average_error_sy)
