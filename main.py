@@ -15,7 +15,7 @@ from typing import Any
 from dataclasses import dataclass
 
 # How many towers. All towers receive the transmission.
-num_towers = 8
+num_towers = 6
 
 # Metre length of a square containing the transmitting
 # device, centred around (x, y) = (0, 0). Device will be randomly placed
