@@ -15,7 +15,7 @@ from typing import Any
 from dataclasses import dataclass
 
 # How many towers. All towers receive the transmission.
-num_towers = 6
+num_towers = 5
 
 # Metre length of a square containing the transmitting
 # device, centred around (x, y) = (0, 0). Device will be randomly placed
@@ -47,40 +47,30 @@ max_d = int(20e3)
 
 # Standard deviation of noise added to the
 # reception times at the towers. Mean is zero.
-rec_time_noise_stdd = 1e-12
+rec_time_noise_stdd = 1e-3
 
-# Whether to plot circles that would be
-# used if performing trilateration. These are circles that are centred
-# on the towers and touch the transmitter site.
 plot_trilateration_tx = True
 plot_trilateration_spheres = True
 plot_trilateration_spheresIntersection_circles = True
 
-# Whether to plot a straight line
-# between every pair of towers. This is useful for visualising the
-# hyperbolic loci focal points.
 plot_lines_between_towers = False
 plot_lines_to_tx = True
 
-# Generate towers with x and y coordinates.
-# for tower i: x, y = towers[i][0], towers[i][1]
-
-towersss = (np.random.rand(num_towers, 3) - 0.5) * rx_square_side
-array_2dd = np.array(towersss)
-zahl1 = np.repeat(1, num_towers)
-array_1dd = np.array(zahl1)
-towerss = array_2dd * array_1dd[:, np.newaxis]
+# The Towers
+towers_0 = (np.random.rand(num_towers, 3) - 0.5) * rx_square_side
+array_2dd = np.array(towers_0)
+zahl_0 = np.repeat(1, num_towers)
+array_1d_0 = np.array(zahl_0)
+towers_1 = array_2dd * array_1d_0[:, np.newaxis]
 zahl = [1, 1, 0]
-array_2d = np.array(towerss)
+array_2d = np.array(towers_1)
 array_1d = np.array(zahl)
 towers = array_2d * array_1d[np.newaxis, :]
-#towers = [[0,0,0],[2,0,0],[1,1,0],[1,-1,0]]
-#towers = np.array(towers)
 print('towers:\n', towers)
 
 # location of transmitting device with tx[0] being x and tx[1] being y.
 tx = (np.random.rand(3) - [0.5, 0.5, -1]) * tx_square_side
-#tx = np.array([1,1,1,1])
+
 decimal_p = 20
 formatted_values_tx = [("{:.{}f}".format(x, decimal_p)) for x in tx]
 formatted_string_tx = ", ".join(formatted_values_tx)
@@ -91,6 +81,8 @@ print("The locations of tx is:", formatted_string_tx)
 # distances[i] is distance from tower i to transmitter.
 distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
                       for x in towers])
+distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
+                              size=num_towers)
 print('distances:', distances)
 
 # Time at which each tower receives the transmission.
@@ -101,14 +93,10 @@ rec_times += np.random.normal(loc=0, scale=rec_time_noise_stdd,
 print('rec_times:', rec_times)
 
 """
-## Create a visualisation for TDOA
+Create a visualisation for TDOA.
 """
 
 # Plot towers and transmission location.
-
-def dfasda():
-    pass
-
 x0, y0, z0 = [], [], []
 for i in range(towers.shape[0]):
     x0.__iadd__([towers[i][0]])
