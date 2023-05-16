@@ -7,7 +7,8 @@ from scipy.optimize import curve_fit
 
 #num_towers = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
 num_towers = []
-num_towers += [i for i in range(4, 150, 4)]
+num = 60
+num_towers += [i for i in range(4, num, 1)]
 print(num_towers)
 tx_square_side = 5e3
 rx_square_side = 30e3
@@ -117,24 +118,27 @@ for x in num_towers:
 
 def func(x, a, b, c):
     return a * np.exp(-b * x) + c
+def func_tri(x, a, b, c):
+    return a * x**(-b) + c
 
 popt, pcov = curve_fit(func, num_towers, error_sy)
+popt_tri, pcov_tri = curve_fit(func_tri, num_towers, error_tri)
 
 # Generate a finer grid of x values for the plot
-x_fit = np.linspace(min(num_towers), max(num_towers), 100)
+x_fit = np.linspace(min(num_towers), max(num_towers), num)
 
 # Evaluate the fitted function with the optimized parameters
 y_fit = func(x_fit, *popt)
+y_fit_tri = func_tri(x_fit, *popt_tri)
 
 # Plot the original data and the fitted curve
-fig = plt.figure(figsize=(14, 8))
-ax = fig.add_subplot()
-ax.plot(num_towers, error_sy, label='error_sy')
-ax.plot(x_fit, y_fit, label='Fitted Curve')
-ax.legend()
-
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 8))
+#ax.plot(num_towers, error_sy, label='error_sy')
+##ax.plot(num_towers, error_tri, label='error_tri')
+ax1.plot(x_fit, y_fit, label='Fitted Curve sy')
+ax2.plot(x_fit, y_fit_tri, label='Fitted Curve tri')
+ax1.legend()
+ax2.legend()
 plt.show()
 
-
-plt.show()
 
