@@ -1,11 +1,7 @@
 import matplotlib.pyplot as plt
-import matplotlib.tri
-from matplotlib import cm
 import numpy as np
 import random
-import sympy as sy
 import math
-from trilateration import sphereCircle, Trilateration_3D
 from matplotlib.animation import FuncAnimation
 
 The_Sierpinski_Triangle = True
@@ -39,7 +35,8 @@ point_1.plot_points()
 point_2.plot_points()
 point_3.plot_points()
 
-num_points = np.array(range(1, 10))
+# number of the points.
+num_points = np.array(range(1, 4000))
 
 a0 = p-1  # upper bound
 b0 = 1    # lower bound
@@ -103,77 +100,10 @@ if The_Sierpinski_Triangle:
         num_points_ann.set_text('number of points = {:} '.format(j))
     anim = FuncAnimation(fig, animate, frames=n_frames, interval=1, blit=False, repeat=False)
     #anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/The_Sierpinski_Triangle.gif', writer='imagemagick', fps=60)
-    #anim.save('/home/soeren/Animations/The_Sierpinski_Triangle.gif', writer='imagemagick', fps=60)
-    # plt.close()
-    # Image(url='C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif')
+    #anim.save('/home/mohammed/Animationen/The_Sierpinski_Triangle.gif', writer='imagemagick', fps=60)
 
     plt.show()
 
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.animation import FuncAnimation
-
-# Define the centers of the spheres
-n = 3  # or any other number of spheres
-centers = np.random.uniform(-5, 5, size=(n, 3))
-
-# Define the figure and 3D axes
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-# Define initial radii and increase rate
-radii = np.ones(n)
-increase_rate = 0.02
-
-
-# Define a function to animate the intersection of the spheres
-def animate(i):
-    global radii
-    # Define the angle for the animation
-    angle = i * np.pi / 180
-
-    # Increase radii
-    radii += increase_rate
-
-    # Calculate the intersection of the spheres
-    points = []
-    for j in range(n):
-        p = centers[j] + radii[j] * np.array([np.sin(angle + j * 2 * np.pi / n), np.cos(angle + j * 2 * np.pi / n), 0])
-        points.append(p)
-    x, y, z = intersection_of_n_spheres(points, radii)
-
-    # Clear the plot and plot the spheres and intersection
-    ax.clear()
-    ax.set_xlim([-10, 10])
-    ax.set_ylim([-10, 10])
-    ax.set_zlim([-10, 10])
-    for j in range(n):
-        ax.scatter(*centers[j], s=radii[j] ** 2)
-    ax.plot(x, y, z, linewidth=radii[0])
-
-
-# Define a function to calculate the intersection of n spheres
-def intersection_of_n_spheres(points, radii):
-    n = len(points)
-    A = np.zeros((n - 1, 3))
-    B = np.zeros(n - 1)
-    for i in range(1, n):
-        A[i - 1] = 2 * (points[i] - points[0])
-        B[i - 1] = radii[0] ** 2 - radii[i] ** 2 - np.dot(points[0], points[0]) + np.dot(points[i], points[i])
-    x, residuals, rank, s = np.linalg.lstsq(A, B, rcond=None)
-    center = points[0] + x
-    radius = np.sqrt(np.dot(center, center) - radii[0] ** 2)
-    u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
-    x = center[0] + radius * np.cos(u) * np.sin(v)
-    y = center[1] + radius * np.sin(u) * np.sin(v)
-    z = center[2] + radius * np.cos(v)
-    return x.flatten(), y.flatten(), z.flatten()
-
-
-# Animate the intersection of the spheres
-anim = FuncAnimation(fig, animate, frames=360, interval=20)
-plt.show()
 
 
 

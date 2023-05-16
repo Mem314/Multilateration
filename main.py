@@ -15,7 +15,7 @@ from typing import Any
 from dataclasses import dataclass
 
 # How many towers. All towers receive the transmission.
-num_towers = 5
+num_towers = 4
 
 # Metre length of a square containing the transmitting
 # device, centred around (x, y) = (0, 0). Device will be randomly placed
@@ -96,7 +96,7 @@ print('rec_times:', rec_times)
 Create a visualisation for TDOA.
 """
 
-# Plot towers and transmission location.
+# coordinates of the towers and their radii.
 x0, y0, z0 = [], [], []
 for i in range(towers.shape[0]):
     x0.__iadd__([towers[i][0]])
@@ -248,7 +248,9 @@ if plot_trilateration_spheresIntersection_circles:
         average_error_tri = np.mean(absolute_difference_tri)
         print("Average error sy.nsolve:", average_error_sy)
         print("Average error Trilatation:", average_error_tri)
+        return [average_error_sy, average_error_tri]
     solveEquations()
+
 
 
     def circles(radius_0, radius):
@@ -415,6 +417,8 @@ if plot_trilateration_spheresIntersection_circles:
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
     ##anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=60)
     #plt.show()
+
+
 
 """
 def plot_trilateration_Intersection():
