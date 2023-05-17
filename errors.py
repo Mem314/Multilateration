@@ -4,8 +4,8 @@ import numpy as np
 import sympy as sy
 from trilateration import Trilateration_3D
 from scipy.optimize import curve_fit
+from scipy.interpolate import UnivariateSpline
 
-#num_towers = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
 num_towers, num_towers_0, num_towers_1 = [], [], []
 num = 150
 num_towers_0 += [i for i in range(4, int(num/9), 1)]
@@ -80,7 +80,7 @@ for x in num_towers:
         system = sy.Matrix(exprs)
 
         # set the initial solution for the numerical method
-        decimal_places = 9
+        decimal_places = 21
         initial_value = 50
         initial_solution = (initial_value, initial_value, initial_value)
         # Solve the system of equations for x, y and z coordinates
@@ -118,18 +118,104 @@ for x in num_towers:
     error_sy.append(errors[0])
     error_tri.append(errors[1])
 
-#error_tri = np.exp(error_tri)
+#num_towers = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 31, 46, 61, 76, 91, 106, 121, 136])
+#error_sy = np.array([5.63504832465265675009e-7, 1.45998042794248661380e-7, 7.77650831402290068292e-7, 0.00000120095875300251011634,
+#3.37529571217528324515e-7, 3.54798676951188889557e-7, 5.93865936392590915149e-7, 3.07218718664156268764e-7,
+#3.34927657035299341145e-7, 9.71848551296287249679e-7, 6.90037142133866369855e-7, 4.43507836333676894180e-7,
+#8.42638103226239993174e-7, 1.91667076375554717993e-7, 2.48177893021025939198e-7, 6.84965949492484978596e-8,
+#2.06276841039777719753e-7, 1.67216104239167768590e-7, 2.03873326970327219583e-7, 1.38335280060031291562e-7,
+#1.38472321369050311209e-7])
+#error_tri = np.array([ -9.47901947, -14.39782463, -11.37811131, -12.83336114, -10.96530388,
+# -13.5173432 , -13.77577825 ,-14.01075756 ,-12.72115198 ,-12.83505651,
+# -11.33986549, -14.42509003 ,-13.31679347, -12.77649985, -14.38143371,
+#  -9.88149988 ,-13.06703477, -12.4487837 , -14.11742431, -13.99293857,
+# -12.95962443])
+#error_sy = np.array(error_sy)
+error_tri = np.array(error_tri)
+
 print(error_sy)
 print(error_tri)
+def exponential_model(x, a, b, c):
+    return a * np.power(x, b)
+# Fit the data using the custom exponential model
+params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=800)
+params_tri, _ = curve_fit(exponential_model, num_towers, error_tri, maxfev=800)
 
+# Generate x-values for the plot
+x = np.linspace(min(num_towers), max(num_towers), 400)
+
+# Compute the fitted curve using the optimized parameters
+fit_curve_sy = exponential_model(x, params_sy[0], params_sy[1], params_sy[2])
+fit_curve_tri = exponential_model(x, params_tri[0], params_tri[1], params_tri[2])
+
+
+# Plot the original data and the fitted curve
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 8))
+ax1.scatter(num_towers, error_sy, label='error_sy')
+ax2.scatter(num_towers, error_tri, label='error_tri')
+ax1.plot(x, fit_curve_sy, color='red', label='Fitted Curve (SY)')
+ax2.plot(x, fit_curve_tri, color='blue', label='Fitted Curve (Tri)')
+plt.xlabel('Number of Towers')
+plt.ylabel('Error')
+ax1.legend()
+ax2.legend()
+plt.show()
+
+"""
+# Fit the data using spline interpolation
+spline_sy = UnivariateSpline(num_towers, error_sy, s=0.1, k=1)
+spline_tri = UnivariateSpline(num_towers, error_tri, s=0.1, k=1)
+
+# Generate x-values for the plot
+x = np.linspace(min(num_towers), max(num_towers), 100)
+
+# Compute the fitted curves
+fit_curve_sy = spline_sy(x)
+fit_curve_tri = spline_tri(x)
+"""
+
+
+"""
+# Define the matrix A and vector b for the least squares problem
+A_sy = np.column_stack((np.ones_like(num_towers), np.exp(-num_towers)))
+b_sy = error_sy
+
+A_tri = np.column_stack((np.ones_like(num_towers), np.exp(-num_towers)))
+b_tri = error_tri
+
+# Solve the least squares problem
+x_sy, _, _, _ = np.linalg.lstsq(A_sy, b_sy, rcond=None)
+x_tri, _, _, _ = np.linalg.lstsq(A_tri, b_tri, rcond=None)
+
+# Generate x-values for the plot
+x = np.linspace(min(num_towers), max(num_towers), 400)
+
+# Compute the fitted curves
+fit_curve_sy = x_sy[0] + x_sy[1] * np.exp(-x)
+fit_curve_tri = x_tri[0] + x_tri[1] * np.exp(-x)
+"""
+
+
+"""
+coefficients_sy = np.polyfit(num_towers, error_sy, 8)
+fit_curve_sy = np.poly1d(coefficients_sy)
+
+coefficients_tri = np.polyfit(num_towers, error_tri, 8)
+fit_curve_tri = np.poly1d(coefficients_tri)
+
+# Generate x-values for the plot
+x = np.linspace(min(num_towers), max(num_towers), 400)
+"""
+
+
+"""
 def func(x, a, b, c):
     return a * np.exp(-b * x) + c
 def func_tri(x, a, b, c):
     return a * np.exp(-b * x) + c
 
-
-popt, pcov = curve_fit(func, num_towers, error_sy)
-popt_tri, pcov_tri = curve_fit(func_tri, num_towers, error_tri)
+popt, pcov = curve_fit(func, num_towers, error_sy, maxfev=1800)
+popt_tri, pcov_tri = curve_fit(func_tri, num_towers, error_tri, method='lm' ,maxfev=800)
 
 # Generate a finer grid of x values for the plot
 x_fit = np.linspace(min(num_towers), max(num_towers), num)
@@ -137,13 +223,4 @@ x_fit = np.linspace(min(num_towers), max(num_towers), num)
 # Evaluate the fitted function with the optimized parameters
 y_fit = func(x_fit, *popt)
 y_fit_tri = func_tri(x_fit, *popt_tri)
-
-# Plot the original data and the fitted curve
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 8))
-ax1.scatter(num_towers, error_sy, label='error_sy')
-ax2.scatter(num_towers, error_tri, label='error_tri')
-ax1.plot(x_fit, y_fit, label='Fitted Curve sy')
-ax2.plot(x_fit, y_fit_tri, label='Fitted Curve tri')
-ax1.legend()
-ax2.legend()
-plt.show()
+"""
