@@ -6,9 +6,11 @@ from trilateration import Trilateration_3D
 from scipy.optimize import curve_fit
 
 #num_towers = [4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]
-num_towers = []
-num = 60
-num_towers += [i for i in range(4, num, 1)]
+num_towers, num_towers_0, num_towers_1 = [], [], []
+num = 150
+num_towers_0 += [i for i in range(4, int(num/9), 1)]
+num_towers_1 += [i for i in range(int(num/9), num, 15)]
+num_towers = num_towers_0 + num_towers_1
 print(num_towers)
 tx_square_side = 5e3
 rx_square_side = 30e3
@@ -16,7 +18,7 @@ v = 299792458
 t_0 = 2.5
 delta_d = int(100)
 max_d = int(20e3)
-rec_time_noise_stdd = 1e-3
+rec_time_noise_stdd = 1e-6
 
 error_sy, error_tri = [], []
 for x in num_towers:
@@ -96,7 +98,7 @@ for x in num_towers:
             formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()])))
                                 for pos in posi]
             return formatted_values
-        formatted_positions = format_positions(positions_array, decimal_places=12)
+        formatted_positions = format_positions(positions_array, decimal_places=decimal_places)
         mean_position = np.mean(positions_array, axis=0)
 
 
@@ -116,10 +118,15 @@ for x in num_towers:
     error_sy.append(errors[0])
     error_tri.append(errors[1])
 
+#error_tri = np.exp(error_tri)
+print(error_sy)
+print(error_tri)
+
 def func(x, a, b, c):
     return a * np.exp(-b * x) + c
 def func_tri(x, a, b, c):
-    return a * x**(-b) + c
+    return a * np.exp(-b * x) + c
+
 
 popt, pcov = curve_fit(func, num_towers, error_sy)
 popt_tri, pcov_tri = curve_fit(func_tri, num_towers, error_tri)
@@ -133,12 +140,10 @@ y_fit_tri = func_tri(x_fit, *popt_tri)
 
 # Plot the original data and the fitted curve
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 8))
-#ax.plot(num_towers, error_sy, label='error_sy')
-##ax.plot(num_towers, error_tri, label='error_tri')
+ax1.scatter(num_towers, error_sy, label='error_sy')
+ax2.scatter(num_towers, error_tri, label='error_tri')
 ax1.plot(x_fit, y_fit, label='Fitted Curve sy')
 ax2.plot(x_fit, y_fit_tri, label='Fitted Curve tri')
 ax1.legend()
 ax2.legend()
 plt.show()
-
-

@@ -81,7 +81,7 @@ if __name__ == "__main__":
     for p in range(0, len(abstand)):
         print(abstand[p])
 
-    decimal_places = 12
+    decimal_places = 9
     positions = Trilateration_3D(abstand, distances)
     def format_positions(posi, decimal_places):
         formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()]))) for
