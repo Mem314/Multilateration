@@ -7,9 +7,9 @@ from scipy.optimize import curve_fit
 from scipy.interpolate import UnivariateSpline
 
 num_towers, num_towers_0, num_towers_1 = [], [], []
-num = 150
+num = 120
 num_towers_0 += [i for i in range(4, int(num/9), 1)]
-num_towers_1 += [i for i in range(int(num/9), num, 15)]
+num_towers_1 += [i for i in range(int(num/9), num, 5)]
 num_towers = num_towers_0 + num_towers_1
 print(num_towers)
 tx_square_side = 5e3
@@ -18,7 +18,7 @@ v = 299792458
 t_0 = 2.5
 delta_d = int(100)
 max_d = int(20e3)
-rec_time_noise_stdd = 1e-6
+rec_time_noise_stdd = 1e-3
 
 error_sy, error_tri = [], []
 for x in num_towers:
@@ -130,11 +130,7 @@ for x in num_towers:
 # -11.33986549, -14.42509003 ,-13.31679347, -12.77649985, -14.38143371,
 #  -9.88149988 ,-13.06703477, -12.4487837 , -14.11742431, -13.99293857,
 # -12.95962443])
-#error_sy = np.array(error_sy)
-error_tri = np.array(error_tri)
 
-print(error_sy)
-print(error_tri)
 def exponential_model(x, a, b, c):
     return a * np.power(x, b)
 # Fit the data using the custom exponential model
