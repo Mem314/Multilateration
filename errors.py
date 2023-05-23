@@ -5,9 +5,10 @@ import sympy as sy
 from trilateration import Trilateration_3D
 from scipy.optimize import curve_fit
 from scipy.interpolate import UnivariateSpline
+import decimal
 
 num_towers, num_towers_0, num_towers_1 = [], [], []
-num = 120
+num = 80
 num_towers_0 += [i for i in range(4, int(num/9), 1)]
 num_towers_1 += [i for i in range(int(num/9), num, 5)]
 num_towers = num_towers_0 + num_towers_1
@@ -15,31 +16,22 @@ print(num_towers)
 tx_square_side = 5e3
 rx_square_side = 30e3
 v = 299792458
-t_0 = 2.5
-delta_d = int(100)
-max_d = int(20e3)
-rec_time_noise_stdd = 1e-3
+rec_time_noise_stdd = 10e-9
+
+precision = 12
+
+tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
+formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
+formatted_string_tx = ", ".join(formatted_values_tx)
+print("The locations of tx is:", formatted_string_tx)
 
 error_sy, error_tri = [], []
 for x in num_towers:
-    towers_0 = (np.random.rand(x, 3) - 0.5) * rx_square_side
-    array_2dd = np.array(towers_0)
-    zahl_0 = np.repeat(1, x)
-    array_1d_0 = np.array(zahl_0)
-    towers_1 = array_2dd * array_1d_0[:, np.newaxis]
-    zahl = [1, 1, 0]
-    array_2d = np.array(towers_1)
-    array_1d = np.array(zahl)
-    towers = array_2d * array_1d[np.newaxis, :]
-
-    tx = (np.random.rand(3) - [0.5, 0.5, -1]) * tx_square_side
-
-    decimal_p = 9
-    formatted_values_tx = [("{:.{}f}".format(x, decimal_p)) for x in tx]
-    formatted_string_tx = ", ".join(formatted_values_tx)
+    towers_0 = (np.random.rand(x, 3).astype(np.float128) - 0.5) * np.float128(rx_square_side)
+    towers = towers_0 * np.array([1, 1, 0], dtype=np.float128)
 
     distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
-                          for x in towers])
+                          for x in towers], dtype=np.float128)
     distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
                                   size=x)
 
@@ -50,10 +42,14 @@ for x in num_towers:
 
     # coordinates of the towers and their radii.
     x0, y0, z0 = [], [], []
+
+    # Set decimal precision
+    decimal.getcontext().prec = precision
+
     for i in range(towers.shape[0]):
-        x0.__iadd__([towers[i][0]])
-        y0.__iadd__([towers[i][1]])
-        z0.__iadd__([towers[i][2]])
+        x0.append(decimal.Decimal(str(towers[i][0])))
+        y0.append(decimal.Decimal(str(towers[i][1])))
+        z0.append(decimal.Decimal(str(towers[i][2])))
 
     def solveEquations():
         x, y, z = sy.symbols("x y z")
@@ -80,26 +76,25 @@ for x in num_towers:
         system = sy.Matrix(exprs)
 
         # set the initial solution for the numerical method
-        decimal_places = 21
         initial_value = 50
         initial_solution = (initial_value, initial_value, initial_value)
         # Solve the system of equations for x, y and z coordinates
         solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=50, verify=False, rational=True,
-                              prec=decimal_places)
+                              prec=precision)
 
 
         positions = Trilateration_3D(towers, distances)
 
         positions_array = np.array(positions)
-        # Check if z coordinate is negative and make it positive
+        # Check if z coordinate is negative and if so make it positive
         if (positions_array[:, 2] < 0).any():
                 positions_array[:, 2] = np.abs(positions_array[:, 2])
         def format_positions(posi, decimal_places):
             formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()])))
                                 for pos in posi]
             return formatted_values
-        formatted_positions = format_positions(positions_array, decimal_places=decimal_places)
-        mean_position = np.mean(positions_array, axis=0)
+        formatted_positions = format_positions(positions_array, decimal_places=precision)
+        mean_position = np.mean(positions_array, axis=0, dtype=np.float128)
 
 
         # Calculate the average error
@@ -108,11 +103,11 @@ for x in num_towers:
         sy_locations = sy_locations.reshape(mean_position.shape)
         absolute_difference_sy = np.abs(original_locations - sy_locations)
         absolute_difference_tri = np.abs(original_locations - mean_position)
-        average_error_sy = np.mean(absolute_difference_sy)
-        average_error_tri = np.mean(absolute_difference_tri)
-        #print("Average error sy.nsolve:", average_error_sy)
-        #print("Average error Trilatation:", average_error_tri)
+        average_error_sy = np.mean(absolute_difference_sy, dtype=np.float128)
+        average_error_tri = np.mean(absolute_difference_tri, dtype=np.float128)
+
         return [average_error_sy, average_error_tri]
+
     solveEquations()
     errors = solveEquations()
     error_sy.append(errors[0])
@@ -134,11 +129,11 @@ for x in num_towers:
 def exponential_model(x, a, b, c):
     return a * np.power(x, b)
 # Fit the data using the custom exponential model
-params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=800)
-params_tri, _ = curve_fit(exponential_model, num_towers, error_tri, maxfev=800)
+params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=2000)
+params_tri, _ = curve_fit(exponential_model, num_towers, error_tri, maxfev=2000)
 
 # Generate x-values for the plot
-x = np.linspace(min(num_towers), max(num_towers), 400)
+x = np.linspace(min(num_towers), max(num_towers), 80)
 
 # Compute the fitted curve using the optimized parameters
 fit_curve_sy = exponential_model(x, params_sy[0], params_sy[1], params_sy[2])
