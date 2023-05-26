@@ -81,7 +81,7 @@ if __name__ == "__main__":
     for p in range(0, len(abstand)):
         print(abstand[p])
 
-    decimal_places = 9
+    decimal_places = 12
     positions = Trilateration_3D(abstand, distances)
     def format_positions(posi, decimal_places):
         formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()]))) for
@@ -92,5 +92,5 @@ if __name__ == "__main__":
     for pos in formatted_positions:
         print("Position: {}".format(pos))
 
-    mean_position = np.mean(positions, axis=0)
+    mean_position = np.mean(positions, axis=0, dtype=np.float128)
     print("mean of the positions: {}".format(mean_position))
