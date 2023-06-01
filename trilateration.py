@@ -54,17 +54,17 @@ def Trilateration_3D(towers, distances):
         x, y, z1, z2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
             x_val = ((r[k] ** 2) - (r[k + 1] ** 2) + (d[k] ** 2)) / (2 * d[k])
-            x.append(x_val)
+            x.append(x_val.astype(np.float128))
             y_val = (((r[k] ** 2) - (r[k + 2] ** 2) + (i[k] ** 2) + (j[k] ** 2)) / (2 * j[k])) - (
                         (i[k] / j[k]) * (x_val))
-            y.append(y_val)
+            y.append(y_val.astype(np.float128))
             z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)).astype(np.float128))
             z2.append((z1[k] * (-1)).astype(np.float128))
 
         ans1, ans2, dist1, dist2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
-            ans1.append(p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k]))
-            ans2.append(p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k]))
+            ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k]).astype(np.float128)))
+            ans2.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k])).astype(np.float128))
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
             dist2.append(np.linalg.norm(p[k + 3] - ans2[k]).astype(np.float128))
 
@@ -75,14 +75,14 @@ def Trilateration_3D(towers, distances):
     return positions
 
 if __name__ == "__main__":
-    num = 150
+    num = 50
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
     rx_square_side = 1
     v = 299792458
     rec_time_noise_stdd = 0
-    precision = 8
+    precision = 12
 
     tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
     formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
         positions = Trilateration_3D(towers_u, distances)
 
-        positions_array = np.array(positions)
+        positions_array = np.array(positions, dtype=np.float128)
         # Check if z coordinate is negative and if so, make it positive
         if (positions_array[:, 2] < 0).any():
             positions_array[:, 2] = np.abs(positions_array[:, 2])
@@ -119,18 +119,17 @@ if __name__ == "__main__":
             ]
             return formatted_values
         formatted_positions = format_positions(positions_array, decimal_places=precision)
+        original_locations = np.array(tx, dtype=np.float128)
 
         for pos in formatted_positions:
             print("Position: {}".format(pos))
         mean_position = np.mean(positions_array, axis=0, dtype=np.float128)
         print("mean of the positions: {}".format(mean_position))
 
-        original_locations = np.array(tx, dtype=np.float128)
-        formatted_positions = np.array(positions_array, dtype=np.float128)
         mean_error_list = []
 
         for i, position in enumerate(formatted_positions):
-            absolute_difference_tri = np.abs(position - original_locations, dtype=np.float128)
+            absolute_difference_tri = np.abs(positions_array - original_locations, dtype=np.float128)
             mean_error_tri = np.mean(absolute_difference_tri).astype(np.float128)
             mean_error_list.append((mean_error_tri).astype(np.float128))
             print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_tri))
@@ -144,7 +143,7 @@ if __name__ == "__main__":
 
 
     # Fit the data using the custom exponential model with weights
-    params_tri, _ = curve_fit(linear_model, num_towers, mean_error_array, method='trf', loss='soft_l1')
+    params_tri, _ = curve_fit(linear_model, num_towers, mean_error_array, method='trf')
 
     # Generate x-values for the plot
     x = np.linspace(min(num_towers), max(num_towers), 80)
@@ -160,7 +159,7 @@ if __name__ == "__main__":
     plt.ylabel('Error')
     ax.legend()
     ax.set_yscale('asinh')
-    ylim = 1e-15
+    ylim = 1e-12
     ax.set_ylim(bottom=-ylim, top=ylim)
 
     # Add text annotation for parameter 'a'
