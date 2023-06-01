@@ -68,59 +68,61 @@ def Trilateration_3D(towers, distances):
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
             dist2.append(np.linalg.norm(p[k + 3] - ans2[k]).astype(np.float128))
 
-        mean_position = np.mean(ans1, axis=0)
+        mean_position = np.mean(ans1, axis=0, dtype=np.float128)
 
         # Append the calculated position to the list of positions
-        positions.append(mean_position)
+        positions.append(mean_position.astype(np.float128))
     return positions
 
 if __name__ == "__main__":
-
-    num = 6
+    num = 150
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
     rx_square_side = 1
     v = 299792458
-    rec_time_noise_stdd = 1e-9
-    precision = 9
-    decimal_places = precision
+    rec_time_noise_stdd = 0
+    precision = 8
 
     tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
     formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
     formatted_string_tx = ", ".join(formatted_values_tx)
     print("The locations of tx is:", formatted_string_tx)
+    towers_0 = (np.random.rand(max(num_towers), 3).astype(np.float128) - 0.5) * np.float128(rx_square_side)
+    towers = towers_0 * np.array([1, 1, 0], dtype=np.float128)
+
 
     for u in num_towers:
-        towers_0 = (np.random.rand(u, 3).astype(np.float128) - 0.5) * np.float128(rx_square_side)
-        towers = towers_0 * np.array([1, 1, 0], dtype=np.float128)
+        # Use the sliced towers within the u loop
+        towers_u = towers[:u]
 
         distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
-                              for x in towers], dtype=np.float128)
+                              for x in towers_u], dtype=np.float128)
         distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
                                       size=u)
-
         # Print out the data
         print("The input points, in the format of [x, y, z], are:")
-        for i, (tower, distance) in enumerate(zip(towers, distances)):
+        for i, (tower, distance) in enumerate(zip(towers_u, distances)):
             print(f"Tower {i + 1}: {tower} Distance: {distance}")
 
-        positions = Trilateration_3D(towers, distances)
-
+        positions = Trilateration_3D(towers_u, distances)
 
         positions_array = np.array(positions)
         # Check if z coordinate is negative and if so, make it positive
         if (positions_array[:, 2] < 0).any():
             positions_array[:, 2] = np.abs(positions_array[:, 2])
+
         def format_positions(posi, decimal_places):
-            formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()])))
-                                for
-                                pos in posi]
+            formatted_values = [
+                ("[{}]".format(", ".join(["{:.{}f}".format(np.float128(x), decimal_places) for x in pos.tolist()])))
+                for pos in posi
+            ]
             return formatted_values
-        formatted_positions = format_positions(positions_array, decimal_places=decimal_places)
+        formatted_positions = format_positions(positions_array, decimal_places=precision)
+
         for pos in formatted_positions:
             print("Position: {}".format(pos))
-        mean_position = np.mean(positions, axis=0, dtype=np.float128)
+        mean_position = np.mean(positions_array, axis=0, dtype=np.float128)
         print("mean of the positions: {}".format(mean_position))
 
         original_locations = np.array(tx, dtype=np.float128)
@@ -128,13 +130,13 @@ if __name__ == "__main__":
         mean_error_list = []
 
         for i, position in enumerate(formatted_positions):
-            absolute_difference_tri = np.abs(position - original_locations)
-            mean_error_tri = np.mean(absolute_difference_tri)
-            mean_error_list.append(mean_error_tri)
-            print("Tower {}: Mean error to tx: {}".format(i + 1, mean_error_tri))
+            absolute_difference_tri = np.abs(position - original_locations, dtype=np.float128)
+            mean_error_tri = np.mean(absolute_difference_tri).astype(np.float128)
+            mean_error_list.append((mean_error_tri).astype(np.float128))
+            print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_tri))
 
-        mean_error_array = np.array(mean_error_list)
-        print(mean_error_array)
+        mean_error_array = np.array(mean_error_list).astype(np.float128)
+        print("mean_error_array: {}".format(mean_error_array))
 
 
     def linear_model(x, a, b):
@@ -142,7 +144,7 @@ if __name__ == "__main__":
 
 
     # Fit the data using the custom exponential model with weights
-    params_tri, _ = curve_fit(linear_model, num_towers, mean_error_array, method='trf', loss='arctan')
+    params_tri, _ = curve_fit(linear_model, num_towers, mean_error_array, method='trf', loss='soft_l1')
 
     # Generate x-values for the plot
     x = np.linspace(min(num_towers), max(num_towers), 80)
@@ -151,11 +153,20 @@ if __name__ == "__main__":
     fit_curve_tri = linear_model(x, params_tri[0], params_tri[1])
 
     # Plot the original data and the fitted curve
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 8))
-    ax2.scatter(num_towers, mean_error_array, label='error_tri')
-    ax2.plot(x, fit_curve_tri, color='blue', label='Fitted Curve (Tri)')
+    fig, ax = plt.subplots(figsize=(14, 8))
+    ax.scatter(num_towers, mean_error_array, label='error_tri')
+    ax.plot(x, fit_curve_tri, color='blue', label='Fitted Curve (Tri)')
     plt.xlabel('Number of Towers')
     plt.ylabel('Error')
-    ax1.legend()
-    ax2.legend()
+    ax.legend()
+    ax.set_yscale('asinh')
+    ylim = 1e-15
+    ax.set_ylim(bottom=-ylim, top=ylim)
+
+    # Add text annotation for parameter 'a'
+    text_x = max(num_towers) * 0.90  # x-coordinate for the text annotation
+    text_y = ylim * 1.1  # y-coordinate for the text annotation
+    text = f'a = {params_tri[0]:}'  # text annotation with parameter 'a' value
+    ax.text(text_x, text_y, text, fontsize=12, ha='center')
+
     plt.show()
