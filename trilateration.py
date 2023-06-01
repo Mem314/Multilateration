@@ -159,7 +159,7 @@ if __name__ == "__main__":
     plt.ylabel('Error')
     ax.legend()
     ax.set_yscale('asinh')
-    ylim = 1e-12
+    ylim = 1e-11
     ax.set_ylim(bottom=-ylim, top=ylim)
 
     # Add text annotation for parameter 'a'
