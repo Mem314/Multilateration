@@ -8,6 +8,7 @@ import sympy as sy
 from scipy.optimize import curve_fit
 import itertools
 
+
 def Trilateration_3D(towers, distances):
     """
     This program implements trilateration in 3 dimensions.
@@ -29,44 +30,50 @@ def Trilateration_3D(towers, distances):
     num_towers = len(towers)
 
     for i in range(num_towers - 3):
+        print("i =" , i)
         # Select a subset of 4 towers
         towers_subset = towers[i:i + 4]
         distances_subset = distances[i:i + 4]
 
         # coordinates: p1 = [x, y, z] and radii.
         p = []
-        for i in range(len(towers_subset)):
-            p.append(np.array(towers_subset[i][:3], dtype=np.float128))
+        for j in range(len(towers_subset)):
+            p.append(np.array(towers_subset[j][:3], dtype=np.float128))
         r = np.array(distances_subset, dtype=np.float128)
 
         # the unit vector in the direction from p1 to p2.
-        d, i, j, e_x, e_y, e_z = [], [], [], [], [], []
+        d, i_vals, j_vals, e_x, e_y, e_z = [], [], [], [], [], []
         for k in range(len(towers_subset) - 3):
             d.append(np.linalg.norm(p[k + 1] - p[k]).astype(np.float128))
             # projection of the vector from p3 to p1 onto e_x.
             e_x.append((p[k + 1] - p[k]) / np.linalg.norm(p[k + 1] - p[k]).astype(np.float128))
-            i.append(np.dot(e_x[k], (p[k + 2] - p[k])).astype(np.float128))
-            e_y.append((p[k + 2] - p[k] - (i[k] * e_x[k])) / np.linalg.norm(p[k + 2] - p[k] - (i[k] * e_x[k])).astype(
-                np.float128))
-            j.append(np.dot(e_y[k], (p[k + 2] - p[k])).astype(np.float128))
+            i_vals.append(np.dot(e_x[k], (p[k + 2] - p[k])).astype(np.float128))
+            e_y.append((p[k + 2] - p[k] - (i_vals[k] * e_x[k])) / np.linalg.norm(
+                p[k + 2] - p[k] - (i_vals[k] * e_x[k])).astype(np.float128))
+            j_vals.append(np.dot(e_y[k], (p[k + 2] - p[k])).astype(np.float128))
             e_z.append(np.cross(e_x[k], e_y[k]).astype(np.float128))
 
         x, y, z1, z2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
             x_val = ((r[k] ** 2) - (r[k + 1] ** 2) + (d[k] ** 2)) / (2 * d[k])
             x.append(x_val.astype(np.float128))
-            y_val = (((r[k] ** 2) - (r[k + 2] ** 2) + (i[k] ** 2) + (j[k] ** 2)) / (2 * j[k])) - (
-                        (i[k] / j[k]) * (x_val))
+            y_val = (((r[k] ** 2) - (r[k + 2] ** 2) + (i_vals[k] ** 2) + (j_vals[k] ** 2)) / (2 * j_vals[k])) - (
+                        (i_vals[k] / j_vals[k]) * x_val)
             y.append(y_val.astype(np.float128))
             z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)).astype(np.float128))
             z2.append((z1[k] * (-1)).astype(np.float128))
 
         ans1, ans2, dist1, dist2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
-            ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k]).astype(np.float128)))
+            print(p[k])
+            print(y[k])
+            print(e_y[k])
+            ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k])).astype(np.float128))
+            print("ans1: ", ans1)
             ans2.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k])).astype(np.float128))
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
             dist2.append(np.linalg.norm(p[k + 3] - ans2[k]).astype(np.float128))
+
 
         mean_position = np.mean(ans1, axis=0, dtype=np.float128)
 
@@ -74,8 +81,9 @@ def Trilateration_3D(towers, distances):
         positions.append(mean_position.astype(np.float128))
     return positions
 
+
 if __name__ == "__main__":
-    num = 50
+    num = 7
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
@@ -160,11 +168,11 @@ if __name__ == "__main__":
     ax.legend()
     ax.set_yscale('asinh')
     ylim = 1e-11
-    ax.set_ylim(bottom=-ylim, top=ylim)
+    ax.set_ylim(bottom=-ylim*2, top=ylim*2)
 
     # Add text annotation for parameter 'a'
-    text_x = max(num_towers) * 0.90  # x-coordinate for the text annotation
-    text_y = ylim * 1.1  # y-coordinate for the text annotation
+    text_x = max(num_towers) * 0.965  # x-coordinate for the text annotation
+    text_y = ylim * 2 * 1.05  # y-coordinate for the text annotation
     text = f'a = {params_tri[0]:}'  # text annotation with parameter 'a' value
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
 
