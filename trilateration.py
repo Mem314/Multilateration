@@ -7,7 +7,7 @@ import math
 import sympy as sy
 from scipy.optimize import curve_fit
 
-
+from decimal import Decimal
 
 def Trilateration_3D(towers, distances):
     """
@@ -39,35 +39,37 @@ def Trilateration_3D(towers, distances):
         # coordinates: p1 = [x, y, z] and radii.
         p = []
         for j in range(len(towers_subset)):
-            p.append(np.array(towers_subset[j][:3], dtype=np.float128))
-        r = np.array(distances_subset, dtype=np.float128)
+            p.append(np.array(towers_subset[j][:3], dtype=np.float64))
+        r = np.array(distances_subset, dtype=np.float64)
 
         # the unit vector in the direction from p1 to p2.
         d, i_vals, j_vals, e_x, e_y, e_z = [], [], [], [], [], []
         for k in range(len(towers_subset) - 3):
-            d.append(np.linalg.norm(p[k + 1] - p[k]).astype(np.float128))
+            d.append(np.linalg.norm(p[k + 1] - p[k]).astype(np.float64))
             # projection of the vector from p3 to p1 onto e_x.
-            e_x.append((p[k + 1] - p[k]) / np.linalg.norm(p[k + 1] - p[k]).astype(np.float128))
-            i_vals.append(np.dot(e_x[k], (p[k + 2] - p[k])).astype(np.float128))
+            e_x.append((p[k + 1] - p[k]) / np.linalg.norm(p[k + 1] - p[k]).astype(np.float64))
+            i_vals.append(np.dot(e_x[k], (p[k + 2] - p[k])).astype(np.float64))
             e_y.append((p[k + 2] - p[k] - (i_vals[k] * e_x[k])) / np.linalg.norm(
-                p[k + 2] - p[k] - (i_vals[k] * e_x[k])).astype(np.float128))
-            j_vals.append(np.dot(e_y[k], (p[k + 2] - p[k])).astype(np.float128))
-            e_z.append(np.cross(e_x[k], e_y[k]).astype(np.float128))
+                p[k + 2] - p[k] - (i_vals[k] * e_x[k])).astype(np.float64))
+            j_vals.append(np.dot(e_y[k], (p[k + 2] - p[k])).astype(np.float64))
+            e_z.append(np.cross(e_x[k], e_y[k]).astype(np.float64))
 
         x, y, z1, z2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
             x_val = ((r[k] ** 2) - (r[k + 1] ** 2) + (d[k] ** 2)) / (2 * d[k])
-            x.append(x_val.astype(np.float128))
+            x.append(x_val.astype(np.float64))
             y_val = (((r[k] ** 2) - (r[k + 2] ** 2) + (i_vals[k] ** 2) + (j_vals[k] ** 2)) / (2 * j_vals[k])) - (
                         (i_vals[k] / j_vals[k]) * x_val)
-            y.append(y_val.astype(np.float128))
-            z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)).astype(np.float128))
-            z2.append((z1[k] * (-1)).astype(np.float128))
+            y.append(y_val.astype(np.float64))
+            z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)).astype(np.float64))
+            z2.append((z1[k] * (-1)).astype(np.float64))
 
         ans1, ans2, dist1, dist2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
             ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k])).astype(np.float128))
-            print("ans1: ", ans1)
+            ans1_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in ans1[-1]]
+            print("ans1: ", ans1_formatted)
+
             ans2.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k])).astype(np.float128))
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
             dist2.append(np.linalg.norm(p[k + 3] - ans2[k]).astype(np.float128))
@@ -81,22 +83,24 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 7
+    num = 50
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
-    rx_square_side = 1
+    rx_square_side = 100
     v = 299792458
     rec_time_noise_stdd = 0
-    precision = 12
+    precision = 15
 
     tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
     formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
     formatted_string_tx = ", ".join(formatted_values_tx)
     print("The locations of tx is:", formatted_string_tx)
-    towers_0 = (np.random.rand(max(num_towers), 3).astype(np.float128) - 0.5) * np.float128(rx_square_side)
+    towers_0 = (np.random.rand(max(num_towers), 3).astype(np.float128) - 0.5) * np.float128(
+        rx_square_side) * np.float128(10)
     towers = towers_0 * np.array([1, 1, 0], dtype=np.float128)
 
+    values = []
 
     for u in num_towers:
         # Use the sliced towers within the u loop
@@ -127,29 +131,44 @@ if __name__ == "__main__":
         formatted_positions = format_positions(positions_array, decimal_places=precision)
         original_locations = np.array(tx, dtype=np.float128)
 
-        for pos in formatted_positions:
-            print("Position: {}".format(pos))
+        formatted_positions = []
+        for pos in positions_array:
+            pos_formatted = [np.format_float_scientific(x, unique=False, precision=15) for x in pos]
+            formatted_positions.append(pos_formatted)
+
         mean_position = np.mean(positions_array, axis=0, dtype=np.float128)
-        print("mean of the positions: {}".format(mean_position))
+        mean_position_formatted = [np.format_float_scientific(x, unique=False, precision=15) for x in mean_position]
+
+        print("Formatted Positions:")
+        for pos_formatted in formatted_positions:
+            print("Position: {}".format(pos_formatted))
+        print("Mean of the positions: {}".format(mean_position_formatted))
 
         mean_error_list = []
 
         for i, position in enumerate(formatted_positions):
             absolute_difference_tri = np.abs(positions_array - original_locations, dtype=np.float128)
+            #print("triiiiiiiiiii: {} ".format(absolute_difference_tri))
             mean_error_tri = np.mean(absolute_difference_tri).astype(np.float128)
-            mean_error_list.append((mean_error_tri).astype(np.float128))
-            print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_tri))
+            mean_error_formatted = np.format_float_scientific(mean_error_tri, unique=False, precision=15)
+            mean_error_list.append(mean_error_formatted)
+            print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_formatted))
 
         mean_error_array = np.array(mean_error_list).astype(np.float128)
-        print("mean_error_array: {}".format(mean_error_array))
+        mean_error_array_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in
+                                      mean_error_array]
+        print("mean_error_array: ", mean_error_array_formatted)
 
+        values.append(mean_error_array)
+        absolute_mean_array_error = [arr[0] for arr in values]
 
+    print(absolute_mean_array_error)
     def linear_model(x, a, b):
         return a * x + b
 
 
     # Fit the data using the custom exponential model with weights
-    params_tri, _ = curve_fit(linear_model, num_towers, mean_error_array, method='trf')
+    params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error, method='trf')
 
     # Generate x-values for the plot
     x = np.linspace(min(num_towers), max(num_towers), 80)
@@ -165,7 +184,7 @@ if __name__ == "__main__":
     plt.ylabel('Error')
     ax.legend()
     ax.set_yscale('asinh')
-    ylim = 1e-11
+    ylim = 1e-12
     ax.set_ylim(bottom=-ylim*2, top=ylim*2)
 
     # Add text annotation for parameter 'a'
