@@ -6,7 +6,7 @@ from matplotlib import cm
 import math
 import sympy as sy
 from scipy.optimize import curve_fit
-import itertools
+
 
 
 def Trilateration_3D(towers, distances):
@@ -26,6 +26,7 @@ def Trilateration_3D(towers, distances):
     Using the first point and the Pythagorean theorem, we can calculate the distances
     between posi and the centers of the spheres.
     """
+
     positions = []
     num_towers = len(towers)
 
@@ -65,9 +66,6 @@ def Trilateration_3D(towers, distances):
 
         ans1, ans2, dist1, dist2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
-            print(p[k])
-            print(y[k])
-            print(e_y[k])
             ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k])).astype(np.float128))
             print("ans1: ", ans1)
             ans2.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k])).astype(np.float128))
