@@ -39,31 +39,28 @@ point_3.plot_points()
 point_4.plot_points()
 
 # number of the points.
-num_points = np.array(range(1, 6000))
+num_points = np.array(range(1, 100))
 
 a0 = p-1  # upper bound
 b0 = 1    # lower bound
 
 #first_point = ((np.random.rand(num_points, 2)) * (b-a)) + a
 
-def first_point(p1, p2, p3, p4):
+def first_point(radius):
     """
-    Random first point within the quadrilateral with vertices p1, p2, p3, and p4.
+    Random first point within a circle with the given radius.
     """
-    x, y = random.random(), random.random()
-    s, t = math.sqrt(1 - x), 1 - y
-    u, v = 1 - s, y - t
-    point_x = s * p1[0] + t * p2[0] + u * p3[0] + v * p4[0]
-    point_y = s * p1[1] + t * p2[1] + u * p3[1] + v * p4[1]
+    angle = 2 * math.pi * random.random()  # Random angle in radians
+    distance = radius * math.sqrt(random.random())  # Random distance from the center
+    point_x = distance * math.cos(angle)
+    point_y = distance * math.sin(angle)
     return (point_x, point_y)
 
-p1 = (point_1.x, point_1.y)
-p2 = (point_2.x, point_2.y)
-p3 = (point_3.x, point_3.y)
-p4 = (point_4.x, point_4.y)
-point = [first_point(p1, p2, p3, p4) for _ in range(1)]
+circle_radius = 30  # Radius of the circle
+
+point = [first_point(circle_radius) for _ in range(1)]
 e1, e2 = zip(*point)
-#plt.scatter(e1, e2, s=1)
+plt.scatter(e1, e2, s=1)
 
 
 if The_Sierpinski_Quadrilateral:
