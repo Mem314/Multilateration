@@ -83,7 +83,7 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 50
+    num = 250
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
@@ -128,8 +128,9 @@ if __name__ == "__main__":
                 for pos in posi
             ]
             return formatted_values
-        formatted_positions = format_positions(positions_array, decimal_places=precision)
-        original_locations = np.array(tx, dtype=np.float128)
+        #formatted_positions = format_positions(positions_array, decimal_places=precision)
+        original_locations = np.array(tx)
+
 
         formatted_positions = []
         for pos in positions_array:
@@ -148,11 +149,11 @@ if __name__ == "__main__":
 
         for i, position in enumerate(formatted_positions):
             absolute_difference_tri = np.abs(positions_array - original_locations, dtype=np.float128)
-            #print("triiiiiiiiiii: {} ".format(absolute_difference_tri))
+
             mean_error_tri = np.mean(absolute_difference_tri).astype(np.float128)
             mean_error_formatted = np.format_float_scientific(mean_error_tri, unique=False, precision=15)
             mean_error_list.append(mean_error_formatted)
-            print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_formatted))
+            print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_tri))
 
         mean_error_array = np.array(mean_error_list).astype(np.float128)
         mean_error_array_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in
@@ -160,7 +161,8 @@ if __name__ == "__main__":
         print("mean_error_array: ", mean_error_array_formatted)
 
         values.append(mean_error_array)
-        absolute_mean_array_error = [arr[0] for arr in values]
+
+    absolute_mean_array_error = [arr[0] for arr in values]
 
     print(absolute_mean_array_error)
     def linear_model(x, a, b):
@@ -168,10 +170,10 @@ if __name__ == "__main__":
 
 
     # Fit the data using the custom exponential model with weights
-    params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error, method='trf')
+    params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error, method='lm')
 
     # Generate x-values for the plot
-    x = np.linspace(min(num_towers), max(num_towers), 80)
+    x = np.linspace(min(num_towers), max(num_towers), 100)
 
     # Compute the fitted curve using the optimized parameters
     fit_curve_tri = linear_model(x, params_tri[0], params_tri[1])
@@ -184,13 +186,12 @@ if __name__ == "__main__":
     plt.ylabel('Error')
     ax.legend()
     ax.set_yscale('asinh')
-    ylim = 1e-12
-    ax.set_ylim(bottom=-ylim*2, top=ylim*2)
+    #ylim = 1e-12
+    #ax.set_ylim(bottom=-ylim*2, top=ylim*2)
 
-    # Add text annotation for parameter 'a'
-    text_x = max(num_towers) * 0.965  # x-coordinate for the text annotation
-    text_y = ylim * 2 * 1.05  # y-coordinate for the text annotation
-    text = f'a = {params_tri[0]:}'  # text annotation with parameter 'a' value
+    text_x = max(num_towers) * 0.9  # x-coordinate for the text annotation
+    text_y = ax.get_ylim()[1] * 1.03  # y-coordinate for the text annotation
+    text = f'a = {params_tri[0] / (max(absolute_mean_array_error)):}'  # text annotation with parameter 'a' value
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
 
     plt.show()
