@@ -82,7 +82,7 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 7
+    num = 30
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
@@ -145,29 +145,21 @@ if __name__ == "__main__":
             print("Position: {}".format(pos_formatted))
         print("Mean of the positions: {}".format(mean_position_formatted))
 
-        mean_error_list = []
-
-        # Convert the arrays to mpmath mpf objects
         mean_position_mpf = np.array(mean_position, dtype=np.float128)
         original_locations_mpf = np.array(original_locations, dtype=np.float128)
 
+        mean_error_list = []
+
         for i, position in enumerate(formatted_positions):
-            # Set the precision for mpmath
             mp.dps = precision
 
-            # Update mean_position_mpf with the current position
-            mean_position_mpf = np.array(position, dtype=np.float128)
+            current_position_mpf = np.array(position, dtype=np.float128)
 
-            # Perform the subtraction with higher precision
-            result_mpf = np.subtract(mean_position_mpf, original_locations_mpf, dtype=np.float128)
-
-            # Convert the result back to a NumPy array
+            result_mpf = np.subtract(current_position_mpf, original_locations_mpf, dtype=np.float128)
             absolute_difference_tri = np.array(result_mpf, dtype=np.float128)
             np.set_printoptions(precision=precision)
 
-            # Print the result array
             print("absolute_difference_tri:", absolute_difference_tri)
-
 
             mean_error_tri = np.mean(absolute_difference_tri).astype(np.float128)
             mean_error_formatted = np.format_float_scientific(mean_error_tri, unique=False, precision=15)
@@ -177,13 +169,12 @@ if __name__ == "__main__":
         mean_error_array = np.array(mean_error_list).astype(np.float128)
         mean_error_array_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in
                                       mean_error_array]
-        #print("mean_error_array: ", mean_error_array_formatted)
 
-        values.append(mean_error_array)
-
-    absolute_mean_array_error = [arr[0] for arr in values]
+    absolute_mean_array_error = mean_error_array_formatted
 
     print("absolute_mean_array_error: {}".format(absolute_mean_array_error))
+
+
     def linear_model(x, a, b):
         return a * x + b
 
@@ -210,7 +201,8 @@ if __name__ == "__main__":
 
     text_x = max(num_towers) * 0.9  # x-coordinate for the text annotation
     text_y = ax.get_ylim()[1] * 1.03  # y-coordinate for the text annotation
-    text = f'a = {params_tri[0] / (max(absolute_mean_array_error)):}'  # text annotation with parameter 'a' value
+    a_value = params_tri[0]
+    text = f'a = {a_value}'
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
 
     plt.show()
