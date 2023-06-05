@@ -6,7 +6,7 @@ from matplotlib import cm
 import math
 import sympy as sy
 from scipy.optimize import curve_fit
-
+from mpmath import mp
 from decimal import Decimal
 
 def Trilateration_3D(towers, distances):
@@ -31,7 +31,6 @@ def Trilateration_3D(towers, distances):
     num_towers = len(towers)
 
     for i in range(num_towers - 3):
-        print("i =" , i)
         # Select a subset of 4 towers
         towers_subset = towers[i:i + 4]
         distances_subset = distances[i:i + 4]
@@ -68,7 +67,7 @@ def Trilateration_3D(towers, distances):
         for k in range(len(towers_subset) - 3):
             ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k])).astype(np.float128))
             ans1_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in ans1[-1]]
-            print("ans1: ", ans1_formatted)
+            #print("ans1: ", ans1_formatted)
 
             ans2.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k])).astype(np.float128))
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
@@ -83,14 +82,14 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 50
+    num = 30
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
-    rx_square_side = 100
+    rx_square_side = 1500
     v = 299792458
     rec_time_noise_stdd = 0
-    precision = 15
+    precision = 12
 
     tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
     formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
@@ -108,8 +107,8 @@ if __name__ == "__main__":
 
         distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
                               for x in towers_u], dtype=np.float128)
-        distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
-                                      size=u)
+        #distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
+        #                              size=u)
         # Print out the data
         print("The input points, in the format of [x, y, z], are:")
         for i, (tower, distance) in enumerate(zip(towers_u, distances)):
@@ -128,8 +127,9 @@ if __name__ == "__main__":
                 for pos in posi
             ]
             return formatted_values
-        formatted_positions = format_positions(positions_array, decimal_places=precision)
-        original_locations = np.array(tx, dtype=np.float128)
+        #formatted_positions = format_positions(positions_array, decimal_places=precision)
+        original_locations = np.array(tx).astype(str).astype(mp.mpf)
+
 
         formatted_positions = []
         for pos in positions_array:
@@ -137,32 +137,44 @@ if __name__ == "__main__":
             formatted_positions.append(pos_formatted)
 
         mean_position = np.mean(positions_array, axis=0, dtype=np.float128)
-        mean_position_formatted = [np.format_float_scientific(x, unique=False, precision=15) for x in mean_position]
+        mean_position_formatted = np.array2string(mean_position, precision=15,
+                                                  formatter={'float_kind': lambda x: "{:.15e}".format(x)})
 
         print("Formatted Positions:")
         for pos_formatted in formatted_positions:
             print("Position: {}".format(pos_formatted))
         print("Mean of the positions: {}".format(mean_position_formatted))
 
+        mean_position_mpf = np.array(mean_position, dtype=np.float128)
+        original_locations_mpf = np.array(original_locations, dtype=np.float128)
+
         mean_error_list = []
 
         for i, position in enumerate(formatted_positions):
-            absolute_difference_tri = np.abs(positions_array - original_locations, dtype=np.float128)
-            #print("triiiiiiiiiii: {} ".format(absolute_difference_tri))
+            mp.dps = precision
+
+            current_position_mpf = np.array(position, dtype=np.float128)
+
+            result_mpf = np.subtract(current_position_mpf, original_locations_mpf, dtype=np.float128)
+            absolute_difference_tri = np.array(result_mpf, dtype=np.float128)
+            np.set_printoptions(precision=precision)
+
+            print("absolute_difference_tri:", absolute_difference_tri)
+
             mean_error_tri = np.mean(absolute_difference_tri).astype(np.float128)
             mean_error_formatted = np.format_float_scientific(mean_error_tri, unique=False, precision=15)
             mean_error_list.append(mean_error_formatted)
-            print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_formatted))
+            print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_tri))
 
         mean_error_array = np.array(mean_error_list).astype(np.float128)
         mean_error_array_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in
                                       mean_error_array]
-        print("mean_error_array: ", mean_error_array_formatted)
 
-        values.append(mean_error_array)
-        absolute_mean_array_error = [arr[0] for arr in values]
+    absolute_mean_array_error = mean_error_array_formatted
 
-    print(absolute_mean_array_error)
+    print("absolute_mean_array_error: {}".format(absolute_mean_array_error))
+
+
     def linear_model(x, a, b):
         return a * x + b
 
@@ -171,26 +183,26 @@ if __name__ == "__main__":
     params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error, method='trf')
 
     # Generate x-values for the plot
-    x = np.linspace(min(num_towers), max(num_towers), 80)
+    x = np.linspace(min(num_towers), max(num_towers), 100)
 
     # Compute the fitted curve using the optimized parameters
     fit_curve_tri = linear_model(x, params_tri[0], params_tri[1])
 
     # Plot the original data and the fitted curve
     fig, ax = plt.subplots(figsize=(14, 8))
-    ax.scatter(num_towers, mean_error_array, label='error_tri')
+    ax.scatter(num_towers, absolute_mean_array_error, label='error_tri')
     ax.plot(x, fit_curve_tri, color='blue', label='Fitted Curve (Tri)')
     plt.xlabel('Number of Towers')
     plt.ylabel('Error')
     ax.legend()
-    ax.set_yscale('asinh')
-    ylim = 1e-12
-    ax.set_ylim(bottom=-ylim*2, top=ylim*2)
+    ax.set_yscale('linear')
+    #ylim = 1e-10
+    #ax.set_ylim(bottom=-ylim*2, top=ylim*2)
 
-    # Add text annotation for parameter 'a'
-    text_x = max(num_towers) * 0.965  # x-coordinate for the text annotation
-    text_y = ylim * 2 * 1.05  # y-coordinate for the text annotation
-    text = f'a = {params_tri[0]:}'  # text annotation with parameter 'a' value
+    text_x = max(num_towers) * 0.9  # x-coordinate for the text annotation
+    text_y = ax.get_ylim()[1] * 1.03  # y-coordinate for the text annotation
+    a_value = params_tri[0]
+    text = f'a = {a_value}'
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
 
     plt.show()
