@@ -62,22 +62,21 @@ def Trilateration_3D(towers, distances):
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
             dist2.append(np.linalg.norm(p[k + 3] - ans2[k]).astype(np.float128))
 
-
-        mean_position = np.mean(ans1, axis=0, dtype=np.float128)
+        mean_positions = np.mean(ans1, axis=0, dtype=np.float128)
 
         # Append the calculated position to the list of positions
-        positions.append(mean_position.astype(np.float128))
+        positions.append(mean_positions.astype(np.float128))
     return positions
 
 
 if __name__ == "__main__":
-    num =120
+    num = 120
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
-    rx_square_side = 1500
+    rx_square_side = 1500  # 30 * 50 Feld
     v = 299792458
-    receive_time_noise_stdd = 0
+    receive_time_noise = 0
     precision = 12
 
     tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
@@ -96,7 +95,7 @@ if __name__ == "__main__":
 
         distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
                               for x in towers_u], dtype=np.float128)
-        distances += np.random.normal(loc=0, scale=receive_time_noise_stdd,
+        distances += np.random.normal(loc=0, scale=receive_time_noise,
                                       size=u)
         # Print out the data
         print("The input points, in the format of [x, y, z], are:")
@@ -116,9 +115,8 @@ if __name__ == "__main__":
                 for pos in posi
             ]
             return formatted_values
-        #formatted_positions = format_positions(positions_array, decimal_places=precision)
-        original_locations = np.array(tx).astype(str).astype(mp.mpf)
 
+        original_locations = np.array(tx).astype(str).astype(mp.mpf)
 
         formatted_positions = []
         for pos in positions_array:
@@ -164,11 +162,8 @@ if __name__ == "__main__":
     absolute_mean_array_error_numeric = np.array(absolute_mean_array_error, dtype=float)
     print("absolute_mean_array_error: {}".format(absolute_mean_array_error_numeric))
 
-
-
     def linear_model(x, a, b):
         return a * x + b
-
 
     # Fit the data using the custom exponential model with weights
     params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error_numeric, method='trf')
