@@ -176,8 +176,9 @@ if __name__ == "__main__":
 
     # Plot the original data and the fitted curve
     fig, ax = plt.subplots(figsize=(14, 8))
-    ax.scatter(num_towers, absolute_mean_array_error_numeric, label='error_tri')
-    ax.plot(x, fit_curve_tri, color='blue', label='Fitted Curve (Tri)')
+    ax.scatter(num_towers, absolute_mean_array_error_numeric, label='error_tri', s=10, c='g', marker='o')
+
+    ax.plot(x, fit_curve_tri, color='red', label='Fitted Curve (Tri)')
     plt.xlabel('Number of Towers')
     plt.ylabel('Error')
     ax.legend()
