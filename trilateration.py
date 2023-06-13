@@ -82,7 +82,7 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 120
+    num = 180
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
