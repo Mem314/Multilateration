@@ -27,37 +27,49 @@ def Trilateration_3D(towers, distances):
         # coordinates: p1 = [x, y, z] and radii.
         p = []
         for j in range(len(towers_subset)):
-            p.append(np.array(towers_subset[j][:3], dtype=np.float64))
-        r = np.array(distances_subset, dtype=np.float64)
+            p.append(np.array(towers_subset[j][:3], dtype=np.float128))
+        r = np.array(distances_subset, dtype=np.float128)
 
-        # the unit vector in the direction from p1 to p2.
         d, i_vals, j_vals, e_x, e_y, e_z = [], [], [], [], [], []
         for k in range(len(towers_subset) - 3):
-            d.append(np.linalg.norm(p[k + 1] - p[k]).astype(np.float64))
-
-            # projection of the vector from p3 to p1 onto e_x.
-            e_x.append((p[k + 1] - p[k]) / np.linalg.norm(p[k + 1] - p[k]).astype(np.float64))
-            i_vals.append(np.dot(e_x[k], (p[k + 2] - p[k])).astype(np.float64))
+            # the Euclidean distance between p[k + 1] and p[k]
+            d.append(np.linalg.norm(p[k + 1] - p[k]).astype(np.float128))
+            # the unit vector e_x in the direction from p1 to p2.
+            e_x.append((p[k + 1] - p[k]) / np.linalg.norm(p[k + 1] - p[k]).astype(np.float128))
+            # the projection of the vector from p[k + 2] to p[k] onto the e_x vector.
+            i_vals.append(np.dot(e_x[k], (p[k + 2] - p[k])).astype(np.float128))
+            #  the unit vector e_y: subtracting the component of the vector from p[k] to p[k + 2] that lies along e_x
             e_y.append((p[k + 2] - p[k] - (i_vals[k] * e_x[k])) / np.linalg.norm(
-                p[k + 2] - p[k] - (i_vals[k] * e_x[k])).astype(np.float64))
-            j_vals.append(np.dot(e_y[k], (p[k + 2] - p[k])).astype(np.float64))
-            e_z.append(np.cross(e_x[k], e_y[k]).astype(np.float64))
+                p[k + 2] - p[k] - (i_vals[k] * e_x[k])).astype(np.float128))
+            # the projection of the vector from p[k + 2] to p[k] onto the e_y vector.
+            j_vals.append(np.dot(e_y[k], (p[k + 2] - p[k])).astype(np.float128))
+            # the cross product of the e_x and e_y vectors, resulting in the orthogonal unit vector e_z.
+            e_z.append(np.cross(e_x[k], e_y[k]).astype(np.float128))
 
         x, y, z1, z2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
             x_val = ((r[k] ** 2) - (r[k + 1] ** 2) + (d[k] ** 2)) / (2 * d[k])
-            x.append(x_val.astype(np.float64))
+            x.append(x_val.astype(np.float128))
+            # calculates the x-coordinate of the trilaterated point based on the distances and radii.
             y_val = (((r[k] ** 2) - (r[k + 2] ** 2) + (i_vals[k] ** 2) + (j_vals[k] ** 2)) / (2 * j_vals[k])) - (
                         (i_vals[k] / j_vals[k]) * x_val)
-            y.append(y_val.astype(np.float64))
-            z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)).astype(np.float64))
-            z2.append((z1[k] * (-1)).astype(np.float64))
+            y.append(y_val.astype(np.float128))
+            # calculates the y-coordinate of the trilaterated point based on the distances,radii, and projection values.
+            z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)).astype(np.float128))
+            # calculates the positive z-coordinate of the trilaterated point based on the distances, radii, and the x
+            # and y coordinates. It uses the Pythagorean theorem to find the z-coordinate.
+            z2.append((z1[k] * (-1)).astype(np.float128))
+            # calculates the negative z-coordinate by multiplying the positive z-coordinate z1 with (-1), because
+            # trilateration can have two possible solutions in 3D space, and
+            # the negative value represents the other solution.
+
 
         ans1, ans2, dist1, dist2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
+            # the first possible trilaterated point is calculated by summing the reference point p[k] with the
+            # respective components along the x, y, and z axes. The values x[k], y[k], and z1[k] are multiplied by their
+            # respective unit vectors e_x[k], e_y[k], and e_z[k], and the results are added together.
             ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k])).astype(np.float128))
-            ans1_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in ans1[-1]]
-
             ans2.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k])).astype(np.float128))
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
             dist2.append(np.linalg.norm(p[k + 3] - ans2[k]).astype(np.float128))
