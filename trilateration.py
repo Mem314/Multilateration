@@ -63,7 +63,6 @@ def Trilateration_3D(towers, distances):
             # trilateration can have two possible solutions in 3D space, and
             # the negative value represents the other solution.
 
-
         ans1, ans2, dist1, dist2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
             # the first possible trilaterated point is calculated by summing the reference point p[k] with the
@@ -71,6 +70,7 @@ def Trilateration_3D(towers, distances):
             # respective unit vectors e_x[k], e_y[k], and e_z[k], and the results are added together.
             ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k])).astype(np.float128))
             ans2.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k])).astype(np.float128))
+            # the distance between the four Point and the calculated one from ans1 and ans2.
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
             dist2.append(np.linalg.norm(p[k + 3] - ans2[k]).astype(np.float128))
 
