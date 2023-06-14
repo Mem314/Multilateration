@@ -1,29 +1,18 @@
 import numpy as np
-from mpl_toolkits import mplot3d
-from mpl_toolkits.mplot3d.axes3d import Axes3D
 import matplotlib.pyplot as plt
-from matplotlib import cm
-import math
-import sympy as sy
 from scipy.optimize import curve_fit
 from mpmath import mp
-from decimal import Decimal
+
 
 def Trilateration_3D(towers, distances):
     """
     This program implements trilateration in 3 dimensions.
     It aims to determine the position of a point (posi) in space based on the
-    position (coordinates) of P_i other points in space and the distance
+    position (coordinates) of P points in space and the distance
     from the unknown point to these known points.
 
-    At least 4 spheres are required to determine posi. The intersection of the first two spheres is a circle.
-    The intersection of two circles is a geodesic. Therefore, at least 4 spheres are required.
-    By using the intersections, we obtain 3 circles and by using their intersections,
-    we obtain 2 geodesics. The intersection of the geodesics gives us the position of posi.
-    For 4 spheres, we obtain 1 geodesic ==> for (4+n) spheres, we obtain (n+1) geodesics.
-
     This implementation is a Cartesian 'true-range multilateration'.
-    Using the first point and the Pythagorean theorem, we can calculate the distances
+    By using the first point and the Pythagorean theorem, we can calculate the distances
     between posi and the centers of the spheres.
     """
 
@@ -38,57 +27,68 @@ def Trilateration_3D(towers, distances):
         # coordinates: p1 = [x, y, z] and radii.
         p = []
         for j in range(len(towers_subset)):
-            p.append(np.array(towers_subset[j][:3], dtype=np.float64))
-        r = np.array(distances_subset, dtype=np.float64)
+            p.append(np.array(towers_subset[j][:3], dtype=np.float128))
+        r = np.array(distances_subset, dtype=np.float128)
 
-        # the unit vector in the direction from p1 to p2.
         d, i_vals, j_vals, e_x, e_y, e_z = [], [], [], [], [], []
         for k in range(len(towers_subset) - 3):
-            d.append(np.linalg.norm(p[k + 1] - p[k]).astype(np.float64))
-            # projection of the vector from p3 to p1 onto e_x.
-            e_x.append((p[k + 1] - p[k]) / np.linalg.norm(p[k + 1] - p[k]).astype(np.float64))
-            i_vals.append(np.dot(e_x[k], (p[k + 2] - p[k])).astype(np.float64))
+            # the Euclidean distance between p[k + 1] and p[k]
+            d.append(np.linalg.norm(p[k + 1] - p[k]).astype(np.float128))
+            # the unit vector e_x in the direction from p1 to p2.
+            e_x.append((p[k + 1] - p[k]) / np.linalg.norm(p[k + 1] - p[k]).astype(np.float128))
+            # the projection of the vector from p[k + 2] to p[k] onto the e_x vector.
+            i_vals.append(np.dot(e_x[k], (p[k + 2] - p[k])).astype(np.float128))
+            #  the unit vector e_y: subtracting the component of the vector from p[k] to p[k + 2] that lies along e_x
             e_y.append((p[k + 2] - p[k] - (i_vals[k] * e_x[k])) / np.linalg.norm(
-                p[k + 2] - p[k] - (i_vals[k] * e_x[k])).astype(np.float64))
-            j_vals.append(np.dot(e_y[k], (p[k + 2] - p[k])).astype(np.float64))
-            e_z.append(np.cross(e_x[k], e_y[k]).astype(np.float64))
+                p[k + 2] - p[k] - (i_vals[k] * e_x[k])).astype(np.float128))
+            # the projection of the vector from p[k + 2] to p[k] onto the e_y vector.
+            j_vals.append(np.dot(e_y[k], (p[k + 2] - p[k])).astype(np.float128))
+            # the cross product of the e_x and e_y vectors, resulting in the orthogonal unit vector e_z.
+            e_z.append(np.cross(e_x[k], e_y[k]).astype(np.float128))
 
         x, y, z1, z2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
             x_val = ((r[k] ** 2) - (r[k + 1] ** 2) + (d[k] ** 2)) / (2 * d[k])
-            x.append(x_val.astype(np.float64))
+            x.append(x_val.astype(np.float128))
+            # calculates the x-coordinate of the trilaterated point based on the distances and radii.
             y_val = (((r[k] ** 2) - (r[k + 2] ** 2) + (i_vals[k] ** 2) + (j_vals[k] ** 2)) / (2 * j_vals[k])) - (
                         (i_vals[k] / j_vals[k]) * x_val)
-            y.append(y_val.astype(np.float64))
-            z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)).astype(np.float64))
-            z2.append((z1[k] * (-1)).astype(np.float64))
+            y.append(y_val.astype(np.float128))
+            # calculates the y-coordinate of the trilaterated point based on the distances,radii, and projection values.
+            z1.append(np.sqrt(np.abs(r[k] ** 2 - x_val ** 2 - y_val ** 2)).astype(np.float128))
+            # calculates the positive z-coordinate of the trilaterated point based on the distances, radii, and the x
+            # and y coordinates. It uses the Pythagorean theorem to find the z-coordinate.
+            z2.append((z1[k] * (-1)).astype(np.float128))
+            # calculates the negative z-coordinate by multiplying the positive z-coordinate z1 with (-1), because
+            # trilateration can have two possible solutions in 3D space, and
+            # the negative value represents the other solution.
 
         ans1, ans2, dist1, dist2 = [], [], [], []
         for k in range(len(towers_subset) - 3):
+            # the first possible trilaterated point is calculated by summing the reference point p[k] with the
+            # respective components along the x, y, and z axes. The values x[k], y[k], and z1[k] are multiplied by their
+            # respective unit vectors e_x[k], e_y[k], and e_z[k], and the results are added together.
             ans1.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z1[k] * e_z[k])).astype(np.float128))
-            ans1_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in ans1[-1]]
-            #print("ans1: ", ans1_formatted)
-
             ans2.append((p[k] + (x[k] * e_x[k]) + (y[k] * e_y[k]) + (z2[k] * e_z[k])).astype(np.float128))
+            # the distance between the four Point and the calculated one from ans1 and ans2.
             dist1.append(np.linalg.norm(p[k + 3] - ans1[k]).astype(np.float128))
             dist2.append(np.linalg.norm(p[k + 3] - ans2[k]).astype(np.float128))
 
-
-        mean_position = np.mean(ans1, axis=0, dtype=np.float128)
+        mean_positions = np.mean(ans1, axis=0, dtype=np.float128)
 
         # Append the calculated position to the list of positions
-        positions.append(mean_position.astype(np.float128))
+        positions.append(mean_positions.astype(np.float128))
     return positions
 
 
 if __name__ == "__main__":
-    num = 30
+    num = 180
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
-    rx_square_side = 1500
+    rx_square_side = 1500  # 30 * 50 Feld
     v = 299792458
-    rec_time_noise_stdd = 0
+    receive_time_noise = 0
     precision = 12
 
     tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
@@ -107,8 +107,8 @@ if __name__ == "__main__":
 
         distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
                               for x in towers_u], dtype=np.float128)
-        #distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
-        #                              size=u)
+        distances += np.random.normal(loc=0, scale=receive_time_noise,
+                                      size=u)
         # Print out the data
         print("The input points, in the format of [x, y, z], are:")
         for i, (tower, distance) in enumerate(zip(towers_u, distances)):
@@ -127,9 +127,8 @@ if __name__ == "__main__":
                 for pos in posi
             ]
             return formatted_values
-        #formatted_positions = format_positions(positions_array, decimal_places=precision)
-        original_locations = np.array(tx).astype(str).astype(mp.mpf)
 
+        original_locations = np.array(tx).astype(str).astype(mp.mpf)
 
         formatted_positions = []
         for pos in positions_array:
@@ -155,13 +154,14 @@ if __name__ == "__main__":
 
             current_position_mpf = np.array(position, dtype=np.float128)
 
-            result_mpf = np.subtract(current_position_mpf, original_locations_mpf, dtype=np.float128)
+            result_mpf = np.abs(np.subtract(current_position_mpf, original_locations_mpf, dtype=np.float128))
             absolute_difference_tri = np.array(result_mpf, dtype=np.float128)
             np.set_printoptions(precision=precision)
 
             print("absolute_difference_tri:", absolute_difference_tri)
 
             mean_error_tri = np.mean(absolute_difference_tri).astype(np.float128)
+            #mean_error_tri = absolute_difference_tri[0].astype(np.float128)
             mean_error_formatted = np.format_float_scientific(mean_error_tri, unique=False, precision=15)
             mean_error_list.append(mean_error_formatted)
             print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_tri))
@@ -171,16 +171,14 @@ if __name__ == "__main__":
                                       mean_error_array]
 
     absolute_mean_array_error = mean_error_array_formatted
-
-    print("absolute_mean_array_error: {}".format(absolute_mean_array_error))
-
+    absolute_mean_array_error_numeric = np.array(absolute_mean_array_error, dtype=float)
+    print("absolute_mean_array_error: {}".format(absolute_mean_array_error_numeric))
 
     def linear_model(x, a, b):
         return a * x + b
 
-
     # Fit the data using the custom exponential model with weights
-    params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error, method='trf')
+    params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error_numeric, method='trf')
 
     # Generate x-values for the plot
     x = np.linspace(min(num_towers), max(num_towers), 100)
@@ -190,14 +188,15 @@ if __name__ == "__main__":
 
     # Plot the original data and the fitted curve
     fig, ax = plt.subplots(figsize=(14, 8))
-    ax.scatter(num_towers, absolute_mean_array_error, label='error_tri')
-    ax.plot(x, fit_curve_tri, color='blue', label='Fitted Curve (Tri)')
+    ax.scatter(num_towers, absolute_mean_array_error_numeric, label='error_tri', s=10, c='g', marker='o')
+
+    ax.plot(x, fit_curve_tri, color='red', label='Fitted Curve (Tri)')
     plt.xlabel('Number of Towers')
     plt.ylabel('Error')
     ax.legend()
     ax.set_yscale('linear')
-    #ylim = 1e-10
-    #ax.set_ylim(bottom=-ylim*2, top=ylim*2)
+    ylim = 1e-8
+    ax.set_ylim(bottom=-ylim*2, top=ylim*2)
 
     text_x = max(num_towers) * 0.9  # x-coordinate for the text annotation
     text_y = ax.get_ylim()[1] * 1.03  # y-coordinate for the text annotation

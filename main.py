@@ -14,6 +14,20 @@ from IPython.display import display, clear_output
 from typing import Any
 from dataclasses import dataclass
 
+"""
+This program implements multitrilateration in 3 dimensions.
+It aims to determine the position of a point (posi) in space based on the
+position (coordinates) of P points in space and the distance
+from the unknown point to these known points.
+
+At least 4 spheres are required to determine the position. The intersection of the first two spheres is a circle.
+The intersection of two circles is a geodesic. Therefore, at least 4 spheres are required.
+By using the intersections, we obtain 3 circles and by using their intersections,
+we obtain 2 geodesics. The intersection of the geodesics gives us the position of posi.
+For 4 spheres, we obtain 1 geodesic ==> for (4+n) spheres, we obtain (n+1) geodesics.
+"""
+
+
 # How many towers. All towers receive the transmission.
 num_towers = 4
 
