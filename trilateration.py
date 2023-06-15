@@ -82,7 +82,7 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 20
+    num = 15
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
@@ -181,27 +181,48 @@ if __name__ == "__main__":
     print(positions_array)
     tx_array = np.array(tx)
 
-    tx_proj = tx_array[:2]
+    positions_array = positions_array.astype(np.float64)
 
     # Convert Cartesian coordinates to polar coordinates
-    r = np.linalg.norm(tx_proj)
-    theta_polar = np.arctan2(tx_proj[1], tx_proj[0])
+    positions_array = positions_array.astype(np.float64)
+    disti = np.linalg.norm(positions_array - tx, axis=1)
+    print(disti)
+    positions_polar = np.arctan2(positions_array[:, 1], positions_array[:, 0])
 
-    # Create polar plot
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+    # Convert angles to degrees
+    positions_theta = np.degrees(positions_polar)
 
-    # Plot data points in polar coordinates
-    ax.scatter(positions_array, np.ones_like(positions_array), label='error_tri', s=30, c='b', marker='o')
+    # Shift negative angles to [0, 360) range
+    positions_theta = (positions_theta + 360) % 360
 
-    # Plot 3D point in polar coordinates
-    #ax.scatter(theta_polar, r, label='original', s=100, c='r', marker='o')
-    ax.scatter(0, 0, label='original', s=100, c='r', marker='o')
+    # Calculate the maximum radius
+    max_radius = max(np.max(disti), np.linalg.norm(tx))
+
+    # Create the polar plot
+    ax = plt.subplot(111, projection='polar')
+
+    # Plot the distances
+    ax.scatter(np.radians(positions_theta), disti, label='Distances', s=20, c='b', marker='o')
+
+    # Plot tx at the center
+    ax.scatter(np.radians([0]), [0], s=20, c='r', marker='o', label='TX')
+
+    # Set plot attributes
+    ax.set_rticks([])  # Hide radial ticks
+    ax.set_xticks(np.radians(np.arange(0, 360, 45)))  # Set angular ticks
+    ax.set_xticklabels(['0', '45', '90', '135', '180', '225', '270', '315'])
 
     # Set grid lines
     ax.grid(True)
+    ax.set_yscale('asinh')
+
+    margin =1e-12  # Set a very small margin
+    #ax.set_ylim(bottom=-max_radius - margin, top=max_radius + margin)
+    ax.set_yticks([])
 
     # Set legend
     ax.legend()
+    plt.show()
 
     """
     Fit Kurve
@@ -252,4 +273,4 @@ if __name__ == "__main__":
     text = f'a = {a_value}'
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
 
-    plt.show()
+    #plt.show()
