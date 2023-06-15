@@ -23,18 +23,18 @@ rec_time_noise_stdd = 10e-9
 
 precision = 9
 
-tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
+tx = (np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.longdouble(rx_square_side)
 formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
 formatted_string_tx = ", ".join(formatted_values_tx)
 print("The locations of tx is:", formatted_string_tx)
 
 error_sy, error_tri = [], []
 for x in num_towers:
-    towers_0 = (np.random.rand(x, 3).astype(np.float128) - 0.5) * np.float128(rx_square_side)
-    towers = towers_0 * np.array([1, 1, 0], dtype=np.float128)
+    towers_0 = (np.random.rand(x, 3).astype(np.longdouble) - 0.5) * np.longdouble(rx_square_side)
+    towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
 
     distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
-                          for x in towers], dtype=np.float128)
+                          for x in towers], dtype=np.longdouble)
     #distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
     #                              size=x)
 
