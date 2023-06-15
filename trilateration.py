@@ -82,24 +82,25 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 180
+    num = 15
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
-    rx_square_side = 1500  # 30 * 50 Feld
+    field_area = 1500  # Area of the field in square meters
+    rx_square_side = np.sqrt(field_area)  # Length of the side of a square field
     v = 299792458
-    receive_time_noise = 0
-    precision = 12
+    receive_time_noise = 1e-15
+    precision = 15  # max precision 15, because tx can only be presented with 15 float-point
 
-    tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.float128(rx_square_side)
+    tx = (np.random.rand(3).astype(np.float128) - [0.5, 0.5, -1]) * np.sqrt(field_area)
     formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
     formatted_string_tx = ", ".join(formatted_values_tx)
     print("The locations of tx is:", formatted_string_tx)
-    towers_0 = (np.random.rand(max(num_towers), 3).astype(np.float128) - 0.5) * np.float128(
-        rx_square_side) * np.float128(10)
+
+    towers_0 = (np.random.rand(max(num_towers), 3).astype(np.float128) - 0.5) * np.sqrt(field_area)
     towers = towers_0 * np.array([1, 1, 0], dtype=np.float128)
 
-    values = []
+    locations = []
 
     for u in num_towers:
         # Use the sliced towers within the u loop
@@ -128,24 +129,26 @@ if __name__ == "__main__":
             ]
             return formatted_values
 
-        original_locations = np.array(tx).astype(str).astype(mp.mpf)
-
+        original_location = np.array(tx)  # .astype(str).astype(mp.mpf)
+        print("original_locations_mpf: {}".format(tx))
         formatted_positions = []
         for pos in positions_array:
-            pos_formatted = [np.format_float_scientific(x, unique=False, precision=15) for x in pos]
+            pos_formatted = [np.format_float_scientific(x, unique=False, precision=precision) for x in pos]
             formatted_positions.append(pos_formatted)
 
         mean_position = np.mean(positions_array, axis=0, dtype=np.float128)
-        mean_position_formatted = np.array2string(mean_position, precision=15,
+        mean_position_formatted = np.array2string(mean_position, precision=precision,
                                                   formatter={'float_kind': lambda x: "{:.15e}".format(x)})
 
         print("Formatted Positions:")
         for pos_formatted in formatted_positions:
             print("Position: {}".format(pos_formatted))
         print("Mean of the positions: {}".format(mean_position_formatted))
+        locations.append(mean_position_formatted)
 
         mean_position_mpf = np.array(mean_position, dtype=np.float128)
-        original_locations_mpf = np.array(original_locations, dtype=np.float128)
+        original_locations_mpf = np.array(original_location, dtype=np.float128)
+        print("original_locations_mpf: {}".format(original_locations_mpf))
 
         mean_error_list = []
 
@@ -154,54 +157,120 @@ if __name__ == "__main__":
 
             current_position_mpf = np.array(position, dtype=np.float128)
 
-            result_mpf = np.abs(np.subtract(current_position_mpf, original_locations_mpf, dtype=np.float128))
+            result_mpf = np.abs(np.subtract(current_position_mpf, tx, dtype=np.float128))
             absolute_difference_tri = np.array(result_mpf, dtype=np.float128)
             np.set_printoptions(precision=precision)
 
             print("absolute_difference_tri:", absolute_difference_tri)
 
             mean_error_tri = np.mean(absolute_difference_tri).astype(np.float128)
-            #mean_error_tri = absolute_difference_tri[0].astype(np.float128)
-            mean_error_formatted = np.format_float_scientific(mean_error_tri, unique=False, precision=15)
+
+            mean_error_formatted = np.format_float_scientific(mean_error_tri, unique=False, precision=precision)
             mean_error_list.append(mean_error_formatted)
             print("Position {}: Mean error to tx: {}".format(i + 1, mean_error_tri))
 
         mean_error_array = np.array(mean_error_list).astype(np.float128)
-        mean_error_array_formatted = [np.format_float_scientific(elem, unique=False, precision=15) for elem in
+        mean_error_array_formatted = [np.format_float_scientific(elem, unique=False, precision=precision) for elem in
                                       mean_error_array]
 
+
     absolute_mean_array_error = mean_error_array_formatted
-    absolute_mean_array_error_numeric = np.array(absolute_mean_array_error, dtype=float)
+    absolute_mean_array_error_numeric = np.array(absolute_mean_array_error, dtype=np.float128)
     print("absolute_mean_array_error: {}".format(absolute_mean_array_error_numeric))
+
+    print(positions_array)
+    tx_array = np.array(tx)
+
+    positions_array = positions_array.astype(np.float64)
+
+    # Convert Cartesian coordinates to polar coordinates
+    positions_array = positions_array.astype(np.float64)
+    disti = np.linalg.norm(positions_array - tx, axis=1)
+    print(disti)
+    positions_polar = np.arctan2(positions_array[:, 1], positions_array[:, 0])
+
+    # Convert angles to degrees
+    positions_theta = np.degrees(positions_polar)
+
+    # Shift negative angles to [0, 360) range
+    positions_theta = (positions_theta + 360) % 360
+
+    # Calculate the maximum radius
+    max_radius = max(np.max(disti), np.linalg.norm(tx))
+
+    # Create the polar plot
+    ax = plt.subplot(111, projection='polar')
+
+    # Plot the distances
+    ax.scatter(np.radians(positions_theta), disti, label='Distances', s=20, c='b', marker='o')
+
+    # Plot tx at the center
+    ax.scatter(np.radians([0]), [0], s=20, c='r', marker='o', label='TX')
+
+    # Set plot attributes
+    ax.set_rticks([])  # Hide radial ticks
+    ax.set_xticks(np.radians(np.arange(0, 360, 45)))  # Set angular ticks
+    ax.set_xticklabels(['0', '45', '90', '135', '180', '225', '270', '315'])
+
+    # Set grid lines
+    ax.grid(True)
+    ax.set_yscale('asinh')
+
+    margin =1e-12  # Set a very small margin
+    #ax.set_ylim(bottom=-max_radius - margin, top=max_radius + margin)
+    ax.set_yticks([])
+
+    # Set legend
+    ax.legend()
+    plt.show()
+
+    """
+    Fit Kurve
+    """
 
     def linear_model(x, a, b):
         return a * x + b
 
     # Fit the data using the custom exponential model with weights
-    params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error_numeric, method='trf')
+    params_tri, _ = curve_fit(linear_model, num_towers, absolute_mean_array_error_numeric, method='lm')
 
     # Generate x-values for the plot
-    x = np.linspace(min(num_towers), max(num_towers), 100)
+    x = np.linspace(min(num_towers), max(num_towers), 300)
 
     # Compute the fitted curve using the optimized parameters
     fit_curve_tri = linear_model(x, params_tri[0], params_tri[1])
 
     # Plot the original data and the fitted curve
     fig, ax = plt.subplots(figsize=(14, 8))
-    ax.scatter(num_towers, absolute_mean_array_error_numeric, label='error_tri', s=10, c='g', marker='o')
+    ax.scatter(num_towers, absolute_mean_array_error_numeric, label='error_tri', s=30, c='b', marker='o')
 
-    ax.plot(x, fit_curve_tri, color='red', label='Fitted Curve (Tri)')
     plt.xlabel('Number of Towers')
     plt.ylabel('Error')
-    ax.legend()
-    ax.set_yscale('linear')
-    ylim = 1e-8
+
+    ax.set_yscale('asinh')
+    ylim = 10**(-(precision-3))
     ax.set_ylim(bottom=-ylim*2, top=ylim*2)
 
-    text_x = max(num_towers) * 0.9  # x-coordinate for the text annotation
+    # Create a secondary y-axis
+    ax2 = ax.twinx()
+
+    # Plot the fitted curve with a different y-axis limit
+    ax2.plot(x, fit_curve_tri, color='red', label='Fitted Curve (tri)')
+    ax2.set_ylabel('Fitted Curve')
+
+    # Set y-axis limits for the fitted curve plot
+    ylim2 = 10**(-(precision-7))  # Set the desired y-axis limits for the fitted curve
+    ax2.set_ylim(bottom=-ylim2, top=ylim2)
+
+    # Combine the legends of both plots
+    handles, labels = ax.get_legend_handles_labels()
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(handles + handles2, labels + labels2)
+
+    text_x = max(num_towers) * 0.5  # x-coordinate for the text annotation
     text_y = ax.get_ylim()[1] * 1.03  # y-coordinate for the text annotation
     a_value = params_tri[0]
     text = f'a = {a_value}'
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
 
-    plt.show()
+    #plt.show()
