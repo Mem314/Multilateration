@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from mpmath import mp
-from matplotlib.colors import Normalize
+import matplotlib.colors as mcolors
 
 
 def Trilateration_3D(towers, distances):
@@ -83,7 +83,7 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 70
+    num = 150
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
@@ -182,31 +182,42 @@ if __name__ == "__main__":
     print(positions_array)
     tx_array = np.array(tx)
 
-    positions_array = positions_array.astype(np.float64)
+    positions_array = positions_array.astype(np.longdouble)
 
     # Extract the z-coordinates for color mapping
     z_coordinates = positions_array[:, 2]
 
     # Create a figure and axis
-    fig, ax = plt.subplots()
-
+    fig, ax = plt.subplots(figsize=(8, 8))
     # Plot the positions_array data with color mapping based on z-coordinate
     scatter = ax.scatter(positions_array[:, 0], positions_array[:, 1], c=z_coordinates, cmap='viridis',
-                         label='positions_array')
+                         label='Positionen')
 
     # Plot the literature value tx
     ax.scatter(tx[0], tx[1], c='r', marker='x', label='tx')
 
     # Set labels and title
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_title('Visualization of the locations with tx')
+    ax.set_xlabel('X-Achse')
+    ax.set_ylabel('Y-Achse')
+    ax.set_title('Visualisierung der Positionen mit tx')
 
-    # Add a colorbar
-    cbar = plt.colorbar(scatter)
-    cbar.set_label('Z')
+    # Create a custom colorbar
+    color_map = plt.cm.ScalarMappable(cmap='viridis',
+                                      norm=mcolors.Normalize(vmin=min(z_coordinates), vmax=max(z_coordinates)))
+    color_map.set_array(z_coordinates)
+    cbar = plt.colorbar(color_map, ax=ax)
+    num_ticks = 10
+    cbar.set_ticks(np.linspace(min(z_coordinates), max(z_coordinates), num_ticks))
+    cbar.set_ticklabels([f'{x:.12f}' for x in np.linspace(min(z_coordinates), max(z_coordinates), num_ticks)])
 
-    plt.grid()
+    cbar.set_label('Z-Achse')
+
+    # Highlight tx value on the colorbar
+    cbar.ax.scatter(0.5, tx[2], c='r', marker='x', label='tx')
+    ax.grid(which='major', color='#DDDDDD', linewidth=0.8)
+    ax.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+    ax.minorticks_on()
+
     ax.legend()
     plt.show()
 
