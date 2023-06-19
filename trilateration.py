@@ -90,8 +90,8 @@ if __name__ == "__main__":
     field_area = 1500  # Area of the field in square meters
     rx_square_side = np.sqrt(field_area)  # Length of the side of a square field
     v = 299792458
-    receive_time_noise = 1e-15
-    precision = 15  # max precision 15, because tx can only be presented with 15 float-point
+    receive_time_noise = 1e-12
+    precision = 12  # max precision 15, because tx can only be presented with 15 float-point
 
     tx = (np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.sqrt(field_area)
     formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
@@ -191,6 +191,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(figsize=(8, 8))
     # Plot the positions_array data with color mapping based on z-coordinate
     scatter = ax.scatter(positions_array[:, 0], positions_array[:, 1], c=z_coordinates, cmap='viridis',
+
                          label='Positionen')
 
     # Plot the literature value tx
