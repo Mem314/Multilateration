@@ -271,4 +271,4 @@ if __name__ == "__main__":
     text = f'a = {a_value}'
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
 
-    #plt.show()
+    plt.show()
