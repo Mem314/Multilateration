@@ -185,33 +185,36 @@ if plot_trilateration_spheresIntersection_circles:
         system = sy.Matrix(exprs)
 
         # set the initial solution for the numerical method
-        decimal_places = 13
         initial_value = 50
         initial_solution = (initial_value, initial_value, initial_value)
         # Solve the system of equations for x, y and z coordinates
         solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=50, verify=False, rational=True,
-                              prec=decimal_places)
+                              prec=precision)
 
 
-        formatted_values_sy = [("{:.{}f}".format(x, decimal_places)) for x in solutions]
+        formatted_values_sy = [("{:.{}f}".format(x, precision)) for x in solutions]
         formatted_string_sy = ", ".join(formatted_values_sy)
         print("sy.nsolve locations is:", formatted_string_sy)
 
         positions = Trilateration_3D(towers, distances)
 
-        positions_array = np.array(positions)
+        positions_array = np.array(positions, dtype=np.float128)
+        formatted_array = np.around(positions_array, decimals=12)
         # Check if z coordinate is negative and make it positive
         if (positions_array[:, 2] < 0).any():
-                positions_array[:, 2] = np.abs(positions_array[:, 2])
-        print(positions_array)
+            positions_array[:, 2] = np.abs(positions_array[:, 2])
+        array_string = np.array2string(formatted_array, precision=12, separator=', ')
+        print("position_array: {}".format(array_string))
+
+
         def format_positions(posi, decimal_places):
             formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()])))
                                 for pos in posi]
             return formatted_values
-        formatted_positions = format_positions(positions_array, decimal_places=12)
+        formatted_positions = format_positions(positions_array, decimal_places=precision)
         for pos in formatted_positions:
             print("Position: {}".format(pos))
-        mean_position = np.mean(positions_array, axis=0)
+        mean_position = np.mean(positions_array, axis=0, dtype=np.longdouble)
         print("mean of the positions: {}".format(mean_position))
 
         # Calculate the average error
@@ -378,10 +381,10 @@ if plot_trilateration_spheresIntersection_circles:
 
 
 
-    anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
+    #anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
     ##anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=60)
-    plt.show()
+    #plt.show()
 
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(projection='3d')
@@ -389,10 +392,10 @@ if plot_trilateration_spheresIntersection_circles:
     ax.axis('off')
 
 
-    anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
+    #anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
     ##anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=60)
-    plt.show()
+    #plt.show()
 
 
 
