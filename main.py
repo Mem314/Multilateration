@@ -28,40 +28,12 @@ For 4 spheres, we obtain 1 geodesic ==> for (4+n) spheres, we obtain (n+1) geode
 """
 
 
-# How many towers. All towers receive the transmission.
 num_towers = 4
-
-# Metre length of a square containing the transmitting
-# device, centred around (x, y) = (0, 0). Device will be randomly placed
-# in this area.
-tx_square_side = 5e3
-
-# Metre length of a square containing the towers,
-# centred around (x, y) = (0, 0). towers will be randomly placed
-# in this area.
-rx_square_side = 30e3
-
-# Speed of transmission propagation. Generally equal to speed of
-# light for radio signals.
+field_area = 1500  # Area of the field in square meters
+rx_square_side = np.sqrt(field_area)  # Length of the side of a square field
 v = 299792458
-
-# Time at which transmission is performed. Really just useful to
-# make sure the code is using relative times rather than depending on one
-# of the reception times being zero.
-t_0 = 2.5
-
-# Metre increments to radii of circles when generating locus of
-# circle intersection.
-delta_d = int(100)
-
-# Max distance a transmission will be from the tower that first
-# received the transmission. This puts an upper bound on the radii of the
-# circle, thus limiting the size of the locus to be near the towers.
-max_d = int(20e3)
-
-# Standard deviation of noise added to the
-# reception times at the towers. Mean is zero.
-rec_time_noise_stdd = 1e-3
+receive_time_noise = 1e-12
+precision = 12
 
 plot_trilateration_tx = True
 plot_trilateration_spheres = True
@@ -71,22 +43,12 @@ plot_lines_between_towers = False
 plot_lines_to_tx = True
 
 # The Towers
-towers_0 = (np.random.rand(num_towers, 3) - 0.5) * rx_square_side
-array_2dd = np.array(towers_0)
-zahl_0 = np.repeat(1, num_towers)
-array_1d_0 = np.array(zahl_0)
-towers_1 = array_2dd * array_1d_0[:, np.newaxis]
-zahl = [1, 1, 0]
-array_2d = np.array(towers_1)
-array_1d = np.array(zahl)
-towers = array_2d * array_1d[np.newaxis, :]
-print('towers:\n', towers)
+towers_0 = (np.random.rand(num_towers, 3).astype(np.longdouble) - 0.5) * np.sqrt(field_area)
+towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
 
-# location of transmitting device with tx[0] being x and tx[1] being y.
-tx = (np.random.rand(3) - [0.5, 0.5, -1]) * tx_square_side
-
-decimal_p = 20
-formatted_values_tx = [("{:.{}f}".format(x, decimal_p)) for x in tx]
+# location of transmitting device (Sender).
+tx = (np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.sqrt(field_area)
+formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
 formatted_string_tx = ", ".join(formatted_values_tx)
 print("The locations of tx is:", formatted_string_tx)
 
@@ -94,15 +56,15 @@ print("The locations of tx is:", formatted_string_tx)
 # simply triangle hypotenuse.
 # distances[i] is distance from tower i to transmitter.
 distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
-                      for x in towers])
-distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
-                              size=num_towers)
+                              for x in towers], dtype=np.longdouble)
+distances += np.random.normal(loc=0, scale=receive_time_noise,
+                                    size=num_towers)
 print('distances:', distances)
 
 # Time at which each tower receives the transmission.
 rec_times = distances / v
 # Add noise to receive times
-rec_times += np.random.normal(loc=0, scale=rec_time_noise_stdd,
+rec_times += np.random.normal(loc=0, scale=receive_time_noise,
                               size=num_towers)
 print('rec_times:', rec_times)
 
@@ -123,12 +85,12 @@ for i in range(towers.shape[0]):
 
 fig = plt.figure(figsize=(14, 8))
 ax = fig.add_subplot(projection='3d')
-fig.subplots_adjust(left=0.2, right=0.8)
-max_width = max(tx_square_side, rx_square_side) / 2
+max_width = rx_square_side / 2
 ax.set_zlim((max_width * -2, max_width * 2))
 ax.set_ylim((max_width * -2, max_width * 2))
 ax.set_xlim((max_width * -2, max_width * 2))
 ax.axis('off')
+plt.tight_layout(pad=0.05)
 ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
 ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
 ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
@@ -152,7 +114,7 @@ if plot_trilateration_spheresIntersection_circles:
             if plot_lines_to_tx:
                 # arrow between transmitter and tx
                 ax.quiver(tx[0], tx[1], tx[2], towers[i][0] - tx[0], towers[i][1] - tx[1], towers[i][2] - tx[2],
-                          arrow_length_ratio=0.2)
+                          arrow_length_ratio=0.1)
             for j in range(i + 1, num_towers):
                 if plot_lines_between_towers:
                     # Line between towers
@@ -328,19 +290,19 @@ if plot_trilateration_spheresIntersection_circles:
 
 
     # Annotations, to be updated during animation
-    l = 40e3
-    k = 3e3
-    cur_time = ax.text(0, 30e3, l + k, 't = 0')
+    l = rx_square_side
+    k = 5
+    cur_time = ax.text(40, l - 4*k , k , 't = 0')
     tower_text = []
     for i in range(num_towers):
-        text = ax.text(0, 30e3, -i * k + l, 'Tower {} received at t = '.format(i))
+        text = ax.text(40, l - 4*k, -i * k , 'Tower {} received at t = '.format(i))
         tower_text.append(text)
 
-    v_vec = ax.quiver(tx[0] + 1e3, tx[1], tx[2], 1, 0, 0,
-                      length=10000, normalize=False, fc='k', ec='k')
-    v_ann = ax.text3D(tx[0] + 4e3, tx[1] + 4e3, tx[2], 'v = {} m/s'.format(v))
-    t_rec = 0
+    v_vec = ax.quiver(tx[0] + 1, tx[1], tx[2], 1, 0, 0,
+                      length=10, normalize=False, fc='k', ec='k')
+    v_ann = ax.text3D(tx[0] + 4, tx[1] + 4, tx[2], 'v = {} m/s'.format(v))
 
+    t_rec = 0
     TDOA = []
     TDOA_dist = []
     for i in range(num_towers):
@@ -349,9 +311,9 @@ if plot_trilateration_spheresIntersection_circles:
             TDOA.append(tdoa)
             TDOA_dist.append(v * tdoa)
 
-    n_frames = 25
-    max_seconds = 1e-4
-    max_d = 1e5
+    n_frames = 40
+    max_seconds = 3e-7
+    max_d = 30
 
     def animate1(i):
         global t_rec, tower_text, v_vec, v_ann
@@ -364,12 +326,12 @@ if plot_trilateration_spheresIntersection_circles:
         plot_lines()
 
         v_vec = ax.quiver(tx[0] + Radius, tx[1], tx[2], 1, 0, 0,
-                          length=10000, normalize=True, fc='k', ec='k')
-        v_ann.set_position((tx[0] + 4e3 + Radius, tx[1] + 4e3))
+                          length=10, normalize=True, fc='k', ec='k')
+        v_ann.set_position((tx[0] + 4 + Radius, tx[1] + 4))
 
         kugel_tx = Kugeln(radius=Radius, x=tx[0], y=tx[1], z=tx[2])
         kugel_tx.coordinaten()
-        cur_time.set_text('t = {:.2E} s'.format(t))
+        cur_time.set_text('t = {:.12E} s'.format(t))
 
         for u in range(num_towers):
             print('Tower {}: t = {}, rec_times[{}] = {}'.format(u, t, u, rec_times[u]))
@@ -383,7 +345,7 @@ if plot_trilateration_spheresIntersection_circles:
         ax.clear()
         ax.collections.clear()
 
-        max_width = max(tx_square_side, rx_square_side) / 2
+        max_width = rx_square_side / 2
         ax.set_zlim((max_width * -2, max_width * 2))
         ax.set_ylim((max_width * -2, max_width * 2))
         ax.set_xlim((max_width * -2, max_width * 2))
@@ -416,21 +378,21 @@ if plot_trilateration_spheresIntersection_circles:
 
 
 
-    #anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
+    anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
     ##anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=60)
-    #plt.show()
+    plt.show()
 
-    fig = plt.figure(figsize=(14, 8))
+    fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(projection='3d')
-    fig.subplots_adjust(left=0.2, right=0.8)
+    fig.tight_layout()
     ax.axis('off')
 
 
-    #anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
+    anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
     ##anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=60)
-    #plt.show()
+    plt.show()
 
 
 
