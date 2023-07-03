@@ -160,6 +160,7 @@ if plot_trilateration_spheresIntersection_circles:
         z = r * (-np.cos(t) * np.cos(psi) * np.sin(alpha) + np.cos(alpha) * np.sin(psi))
         return [x, y, z]
 
+
     def solveEquations():
         x, y, z = sy.symbols("x y z")
         first_tower = int(np.argmin(rec_times))
@@ -230,6 +231,50 @@ if plot_trilateration_spheresIntersection_circles:
         return [average_error_sy, average_error_tri]
     solveEquations()
 
+
+    def solveEquations_Linearisation():
+        x, y, z = sy.symbols("x y z")
+        first_tower = int(np.argmin(rec_times))
+        dx, dy, dz = [], [], []
+        disti = []
+        for i in [x for x in range(towers.shape[0]) if x != first_tower]:
+            dx.append(x0[i] - x0[first_tower])
+            dy.append(y0[i] - y0[first_tower])
+            dz.append(z0[i] - z0[first_tower])
+            disti.append(distances[i])
+
+        k = []
+        for i in range(towers.shape[0] - 1):
+            k.append((dx[i] - x0[first_tower]) ** 2 + (dy[i] - y0[first_tower]) ** 2 + (dz[i] - z0[first_tower]) ** 2)
+
+        b = []
+        for i in range(towers.shape[0] - 1):
+            eq_b = (distances[first_tower] ** 2 - disti[i] ** 2 - k[first_tower] + k[i])
+            b.append(eq_b)
+        b = sy.Matrix(b)
+
+        A = sy.Matrix([])
+        for i in range(towers.shape[0] - 1):
+            row = [x0[i] - x0[first_tower], y0[i] - y0[first_tower], y0[i] - y0[first_tower]]
+            row_matrix = sy.Matrix(row)
+            A = A.row_insert(i, row_matrix)
+
+        r = sy.Matrix([x, y, z])
+
+        b = b.T
+
+        print("------------------------------------------------------------------------------------------")
+        solution = sy.solve(A * r - b, r)
+
+        # Print the solution
+        print(solution)
+
+
+
+
+
+
+    solveEquations_Linearisation()
 
 
     def circles(radius_0, radius):
@@ -397,7 +442,9 @@ if plot_trilateration_spheresIntersection_circles:
     ##anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=60)
     #plt.show()
 
-
+"""
+https://www.th-luebeck.de/fileadmin/media_cosa/Dateien/Veroeffentlichungen/Sammlung/TR-2-2015-least-sqaures-with-ToA.pdf
+"""
 
 """
 def plot_trilateration_Intersection():
