@@ -199,7 +199,7 @@ if plot_trilateration_spheresIntersection_circles:
 
         positions = Trilateration_3D(towers, distances)
 
-        positions_array = np.array(positions, dtype=np.float128)
+        positions_array = np.array(positions)
         formatted_array = np.around(positions_array, decimals=12)
         # Check if z coordinate is negative and make it positive
         if (positions_array[:, 2] < 0).any():
@@ -233,8 +233,11 @@ if plot_trilateration_spheresIntersection_circles:
 
 
     def solveEquations_Linearisation():
+        print("----------------------------------------------------------------")
         x, y, z = sy.symbols("x y z")
         first_tower = int(np.argmin(rec_times))
+        print(first_tower)
+
         dx, dy, dz = [], [], []
         disti = []
         for i in [x for x in range(towers.shape[0]) if x != first_tower]:
@@ -245,33 +248,27 @@ if plot_trilateration_spheresIntersection_circles:
 
         k = []
         for i in range(towers.shape[0] - 1):
-            k.append((dx[i] - x0[first_tower]) ** 2 + (dy[i] - y0[first_tower]) ** 2 + (dz[i] - z0[first_tower]) ** 2)
+            k.insert(i, (dx[i] - x0[first_tower]) ** 2 + (dy[i] - y0[first_tower]) ** 2 + (dz[i] - z0[first_tower]) ** 2)
+        k_first_tower = (x0[first_tower]) ** 2 + (y0[first_tower]) ** 2 + (z0[first_tower]) ** 2
 
         b = []
         for i in range(towers.shape[0] - 1):
-            eq_b = (distances[first_tower] ** 2 - disti[i] ** 2 - k[first_tower] + k[i])
+            eq_b = (distances[first_tower] ** 2 - disti[i] ** 2 - k_first_tower + k[i])
             b.append(eq_b)
         b = sy.Matrix(b)
 
         A = sy.Matrix([])
         for i in range(towers.shape[0] - 1):
-            row = [x0[i] - x0[first_tower], y0[i] - y0[first_tower], y0[i] - y0[first_tower]]
-            row_matrix = sy.Matrix(row)
-            A = A.row_insert(i, row_matrix)
+            row = sy.Matrix([[dx[i] - x0[first_tower], dy[i] - y0[first_tower], dz[i] - z0[first_tower]]])
+            #row = sy.Matrix([[x * i, y, z]])
+            A = A.row_insert(i, row)
 
-        r = sy.Matrix([x, y, z])
+        sy.pprint(A)
+        A = 2 * A
+        r = sy.Matrix([[x], [y], [z]])
 
-        b = b.T
-
-        print("------------------------------------------------------------------------------------------")
         solution = sy.solve(A * r - b, r)
-
-        # Print the solution
         print(solution)
-
-
-
-
 
 
     solveEquations_Linearisation()
