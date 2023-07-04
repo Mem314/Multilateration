@@ -259,18 +259,19 @@ if plot_trilateration_spheresIntersection_circles:
 
         A = sy.Matrix([])
         for i in range(towers.shape[0] - 1):
-            row = sy.Matrix([[dx[i] - x0[first_tower], dy[i] - y0[first_tower], dz[i] - z0[first_tower]]])
+            row = sy.Matrix([[dx[i] - x0[first_tower], dy[i] - y0[first_tower], 1e-30]])
             #row = sy.Matrix([[x * i, y, z]])
             A = A.row_insert(i, row)
-
-        sy.pprint(A)
         A = 2 * A
+        sy.pprint(A)
         r = sy.Matrix([[x], [y], [z]])
 
         solution = sy.solve(A * r - b, r)
         print(solution)
-
-
+        A_inv = A.inv()
+        A_T = A.T
+        zzz = (A_T*A).inv() * A_T*b
+        print (zzz)
     solveEquations_Linearisation()
 
 
