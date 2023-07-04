@@ -44,7 +44,8 @@ plot_lines_to_tx = True
 
 # The Towers
 towers_0 = (np.random.rand(num_towers, 3).astype(np.longdouble) - 0.5) * np.sqrt(field_area)
-towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
+towers = towers_0 * np.array([1, 1, 1e-18], dtype=np.longdouble)
+print("Towers:", towers)
 
 # location of transmitting device (Sender).
 tx = (np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.sqrt(field_area)
@@ -233,7 +234,7 @@ if plot_trilateration_spheresIntersection_circles:
 
 
     def solveEquations_Linearisation():
-        print("-----------------------------------------------------Linearisation-----------")
+        print("----------------------------------------------------- Linearisation -----------")
         x, y, z = sy.symbols("x y z")
 
         k = []
@@ -242,25 +243,24 @@ if plot_trilateration_spheresIntersection_circles:
 
         b = []
         for i in range(1, towers.shape[0]):
-            eq_b = (distances[0] ** 2 - distances[i] ** 2 - k[0] + k[i])
+            eq_b = (distances[0]**2 - distances[i]**2 - k[0] + k[i])
             b.append(eq_b)
         b = sy.Matrix(b)
 
         A = sy.Matrix([])
-        for i in range(1, towers.shape[0] ):
-            row = sy.Matrix([[x0[i] - x0[0], y0[i] - y0[0], 1e-18]])
+        for i in range(1, towers.shape[0]):
+            row = sy.Matrix([[x0[i] - x0[0], y0[i] - y0[0], z0[i] - z0[0]]])
             #row = sy.Matrix([[x * i, y, z]])
             A = A.row_insert(i, row)
+
         A = 2 * A
-        sy.pprint(A)
         r = sy.Matrix([[x], [y], [z]])
 
-        solution = sy.solve(A * r - b, r)
-        print(solution)
-        A_inv = A.inv()
+        solution_1 = sy.solve(A * r - b, r)
+        print(solution_1)
         A_T = A.T
-        zzz = (A_T*A).inv() * A_T*b
-        print (zzz)
+        solution_2 = (A_T*A).inv() * A_T*b
+        print(solution_2)
     solveEquations_Linearisation()
 
 
