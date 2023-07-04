@@ -83,7 +83,7 @@ def Trilateration_3D(towers, distances):
 
 
 if __name__ == "__main__":
-    num = 150
+    num = 90
     num_towers = [i for i in range(4, num+1, 1)]
     print(num_towers)
 
@@ -240,7 +240,7 @@ if __name__ == "__main__":
 
     # Plot the original data and the fitted curve
     fig, ax = plt.subplots(figsize=(14, 8))
-    ax.scatter(num_towers, absolute_mean_array_error_numeric, label='error_tri', s=30, c='b', marker='o')
+    ax.scatter(num_towers, absolute_mean_array_error_numeric, label='error_tri', s=30, c='r', marker='o')
 
     plt.xlabel('Number of Towers')
     plt.ylabel('Error')
@@ -253,7 +253,7 @@ if __name__ == "__main__":
     ax2 = ax.twinx()
 
     # Plot the fitted curve with a different y-axis limit
-    ax2.plot(x, fit_curve_tri, color='red', label='Fitted Curve (tri)')
+    ax2.plot(x, fit_curve_tri, color='black', label='Fitted Curve (tri)')
     ax2.set_ylabel('Fitted Curve')
 
     # Set y-axis limits for the fitted curve plot
@@ -270,5 +270,8 @@ if __name__ == "__main__":
     a_value = params_tri[0]
     text = f'a = {a_value}'
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
+
+    # Table for overleaf
+
 
     plt.show()
