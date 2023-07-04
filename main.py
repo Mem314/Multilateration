@@ -233,33 +233,22 @@ if plot_trilateration_spheresIntersection_circles:
 
 
     def solveEquations_Linearisation():
-        print("----------------------------------------------------------------")
+        print("-----------------------------------------------------Linearisation-----------")
         x, y, z = sy.symbols("x y z")
-        first_tower = int(np.argmin(rec_times))
-        print(first_tower)
-
-        dx, dy, dz = [], [], []
-        disti = []
-        for i in [x for x in range(towers.shape[0]) if x != first_tower]:
-            dx.append(x0[i] - x0[first_tower])
-            dy.append(y0[i] - y0[first_tower])
-            dz.append(z0[i] - z0[first_tower])
-            disti.append(distances[i])
 
         k = []
-        for i in range(towers.shape[0] - 1):
-            k.insert(i, (dx[i] - x0[first_tower]) ** 2 + (dy[i] - y0[first_tower]) ** 2 + (dz[i] - z0[first_tower]) ** 2)
-        k_first_tower = (x0[first_tower]) ** 2 + (y0[first_tower]) ** 2 + (z0[first_tower]) ** 2
+        for i in range(towers.shape[0]):
+            k.append(x0[i]**2 + y0[i]**2 + z0[i]**2)
 
         b = []
-        for i in range(towers.shape[0] - 1):
-            eq_b = (distances[first_tower] ** 2 - disti[i] ** 2 - k_first_tower + k[i])
+        for i in range(1, towers.shape[0]):
+            eq_b = (distances[0] ** 2 - distances[i] ** 2 - k[0] + k[i])
             b.append(eq_b)
         b = sy.Matrix(b)
 
         A = sy.Matrix([])
-        for i in range(towers.shape[0] - 1):
-            row = sy.Matrix([[dx[i] - x0[first_tower], dy[i] - y0[first_tower], 1e-30]])
+        for i in range(1, towers.shape[0] ):
+            row = sy.Matrix([[x0[i] - x0[0], y0[i] - y0[0], 1e-18]])
             #row = sy.Matrix([[x * i, y, z]])
             A = A.row_insert(i, row)
         A = 2 * A
