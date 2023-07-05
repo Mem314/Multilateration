@@ -45,7 +45,7 @@ plot_lines_to_tx = True
 
 # The Towers
 towers_0 = (np.random.rand(num_towers, 3).astype(np.longdouble) - 0.5) * np.sqrt(field_area)
-towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
+towers = towers_0 * np.array([1, 1, 1], dtype=np.longdouble)
 print("Towers:", towers)
 
 # location of transmitting device (Sender).
@@ -274,20 +274,41 @@ if plot_trilateration_spheresIntersection_circles:
         This is because is set the Towers to have z=0, the det of A is then not defined and with that
         the inverse of A is not defined. With this method only x and y coordinates are calculated.
         """
-        #solution_1 = sy.solve(A * r - b, r)
-        #print(solution_1)
+        solution_1 = sy.solve(A * r - b, r)
+        print(solution_1)
 
         """
         Also here is the same Problem duo to the invers of (A^T * T).
         """
-        #A_T = A.T
-        #solution_2 = (A_T*A).inv() * A_T*b
-        #print(solution_2)
+        A_T = A.T
+        solution_2 = (A_T*A).inv() * A_T*b
+        print(solution_2)
 
 
         equation = sy.Eq(A*r, b)
-        solution_3 = sy.solve(equation, r, fractions=True)
+        solution_3 = sy.solve(equation, r)
         print(solution_3)
+
+        # Convert A and b to NumPy arrays
+        A_np = np.array(A.tolist(), dtype=np.float64)
+        b_np = np.array(b.tolist(), dtype=np.float64)
+
+        # Compute the SVD
+        u, s, vh = np.linalg.svd(A_np, full_matrices=False)
+
+        # Set a tolerance for determining non-zero singular values
+        tolerance = np.finfo(float).eps * max(A_np.shape) * max(s)
+
+        # Compute the pseudoinverse of A
+        s_inv = np.where(s > tolerance, 1.0 / s, 0)
+        A_pseudoinv = np.dot(vh.T, np.dot(np.diag(s_inv), u.T))
+
+        # Compute the approximation of r
+        r_approx = np.dot(A_pseudoinv, b_np)
+
+        # Print the approximation of r
+        print("Approximation of r:")
+        print(r_approx)
     solveEquations_Linearisation()
 
 
