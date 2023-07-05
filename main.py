@@ -255,6 +255,14 @@ if plot_trilateration_spheresIntersection_circles:
         for i in range(towers.shape[0]):
             k.append(x0[i]**2 + y0[i]**2 + z0[i]**2)
 
+        """
+        Moreover, vector b  consists of  distances between the  unknown point N 
+        and  all  the  reference  points.  Especially  in  static  sensor 
+        networks  the  computation  of  the  entire  localization  can  be 
+        accomplished in the nodes themselves, since the computation 
+        is restricted to a matrix vector  multiplication of matrix L and 
+        vector b. 
+         """
         b = []
         for i in range(1, towers.shape[0]):
             eq_b = (distances[0]**2 - distances[i]**2 - k[0] + k[i])
@@ -271,44 +279,45 @@ if plot_trilateration_spheresIntersection_circles:
 
         """
         solution_1 is using r=A^(-1)*b to solve the problem, which is not possible duo to the A^(-1).
-        This is because is set the Towers to have z=0, the det of A is then not defined and with that
+        This is because we set the Towers to have z=0, the det of A is then not defined and with that
         the inverse of A is not defined. With this method only x and y coordinates are calculated.
         """
         solution_1 = sy.solve(A * r - b, r)
-        print(solution_1)
+        print("solution_1:", solution_1)
 
         """
         Also here is the same Problem duo to the invers of (A^T * T).
         """
         A_T = A.T
-        solution_2 = (A_T*A).inv() * A_T*b
-        print(solution_2)
+        eqution_2 = sy.Eq((A_T*A).inv() * A_T * b, r)
+        solution_2 = sy.solve(eqution_2, r)
+        print("solution_2:", solution_2)
 
+        equation_3 = sy.Eq(A*r, b)
+        solution_3 = sy.solve(equation_3, r)
+        print("solution_3:", solution_3)
 
-        equation = sy.Eq(A*r, b)
-        solution_3 = sy.solve(equation, r)
-        print(solution_3)
+        equation_4 = sy.Eq((A_T * A)*r, A_T * b)
+        solution_4 = sy.solve(equation_4, r)
+        print("solution_4:", solution_4)
 
-        # Convert A and b to NumPy arrays
-        A_np = np.array(A.tolist(), dtype=np.float64)
-        b_np = np.array(b.tolist(), dtype=np.float64)
-
-        # Compute the SVD
-        u, s, vh = np.linalg.svd(A_np, full_matrices=False)
-
-        # Set a tolerance for determining non-zero singular values
-        tolerance = np.finfo(float).eps * max(A_np.shape) * max(s)
-
+        """
+         When the matrix A is singular (z=0), we get either no solution or infinite solution to the problem A*r=b, 
+         thats why we consider the pseudoinverse approach and that may yield inaccurate results, especially if the 
+         singular values are close to zero. In such cases, the system of equations is ill-conditioned, and finding an 
+         accurate solution becomes challenging.
+        """
         # Compute the pseudoinverse of A
-        s_inv = np.where(s > tolerance, 1.0 / s, 0)
-        A_pseudoinv = np.dot(vh.T, np.dot(np.diag(s_inv), u.T))
+        A_pseudoinv = A.pinv()
 
-        # Compute the approximation of r
-        r_approx = np.dot(A_pseudoinv, b_np)
+        # Compute the solution vector r using the pseudoinverse
+        r = np.dot(A_pseudoinv, b)
 
-        # Print the approximation of r
-        print("Approximation of r:")
-        print(r_approx)
+        # Print the solution vector r
+        print("Solution vector r:")
+        print(r)
+
+
     solveEquations_Linearisation()
 
 
@@ -478,6 +487,7 @@ if plot_trilateration_spheresIntersection_circles:
     #plt.show()
 
 """
+https://rosap.ntl.bts.gov/view/dot/12134
 https://www.th-luebeck.de/fileadmin/media_cosa/Dateien/Veroeffentlichungen/Sammlung/TR-2-2015-least-sqaures-with-ToA.pdf
 """
 
