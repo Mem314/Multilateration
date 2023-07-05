@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
 import sympy as sy
+import scipy
 import math
 import sys
 import time
@@ -44,7 +45,7 @@ plot_lines_to_tx = True
 
 # The Towers
 towers_0 = (np.random.rand(num_towers, 3).astype(np.longdouble) - 0.5) * np.sqrt(field_area)
-towers = towers_0 * np.array([1, 1, 1e-18], dtype=np.longdouble)
+towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
 print("Towers:", towers)
 
 # location of transmitting device (Sender).
@@ -235,6 +236,19 @@ if plot_trilateration_spheresIntersection_circles:
 
     def solveEquations_Linearisation():
         print("----------------------------------------------------- Linearisation -----------")
+
+        """
+        This vignette illustrates the ideas behind solving systems of linear equations of the form Ax=b where:
+        - A is an m×n matrix of coefficients for m equations in n unknowns
+        - x is an n×1 vector unknowns, x1,x2,…xn
+        - b is an m×1 vector of constants, the “right-hand sides” of the equations
+        
+        The general conditions for solutions are:
+        - the equations are consistent (solutions exist) if r(A|b)=r(A)
+            - the solution is unique if r(A|b)=r(A)=n
+            - the solution is underdetermined if r(A|b)=r(A)<n
+        - the equations are inconsistent (no solutions) if r(A|b)>r(A)
+        """
         x, y, z = sy.symbols("x y z")
 
         k = []
@@ -250,17 +264,30 @@ if plot_trilateration_spheresIntersection_circles:
         A = sy.Matrix([])
         for i in range(1, towers.shape[0]):
             row = sy.Matrix([[x0[i] - x0[0], y0[i] - y0[0], z0[i] - z0[0]]])
-            #row = sy.Matrix([[x * i, y, z]])
             A = A.row_insert(i, row)
 
         A = 2 * A
         r = sy.Matrix([[x], [y], [z]])
 
-        solution_1 = sy.solve(A * r - b, r)
-        print(solution_1)
-        A_T = A.T
-        solution_2 = (A_T*A).inv() * A_T*b
-        print(solution_2)
+        """
+        solution_1 is using r=A^(-1)*b to solve the problem, which is not possible duo to the A^(-1).
+        This is because is set the Towers to have z=0, the det of A is then not defined and with that
+        the inverse of A is not defined. With this method only x and y coordinates are calculated.
+        """
+        #solution_1 = sy.solve(A * r - b, r)
+        #print(solution_1)
+
+        """
+        Also here is the same Problem duo to the invers of (A^T * T).
+        """
+        #A_T = A.T
+        #solution_2 = (A_T*A).inv() * A_T*b
+        #print(solution_2)
+
+
+        equation = sy.Eq(A*r, b)
+        solution_3 = sy.solve(equation, r, fractions=True)
+        print(solution_3)
     solveEquations_Linearisation()
 
 
