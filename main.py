@@ -45,7 +45,7 @@ plot_lines_to_tx = True
 
 # The Towers
 towers_0 = (np.random.rand(num_towers, 3).astype(np.longdouble) - 0.5) * np.sqrt(field_area)
-towers = towers_0 * np.array([1, 1, 1], dtype=np.longdouble)
+towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
 print("Towers:", towers)
 
 # location of transmitting device (Sender).
@@ -289,9 +289,9 @@ if plot_trilateration_spheresIntersection_circles:
         Also here is the same Problem duo to the invers of (A^T * T).
         """
         A_T = A.T
-        eqution_2 = sy.Eq((A_T*A).inv() * A_T * b, r)
-        solution_2 = sy.solve(eqution_2, r)
-        print("solution_2:", solution_2)
+        #eqution_2 = sy.Eq((A_T*A).inv() * A_T * b, r)
+        #solution_2 = sy.solve(eqution_2, r)
+        #print("solution_2:", solution_2)
 
         equation_3 = sy.Eq(A*r, b)
         solution_3 = sy.solve(equation_3, r)
@@ -316,9 +316,7 @@ if plot_trilateration_spheresIntersection_circles:
         # Print the solution vector r
         print("Solution vector r:")
         print(r)
-
-
-    solveEquations_Linearisation()
+    #solveEquations_Linearisation()
 
 
     def circles(radius_0, radius):
@@ -487,7 +485,7 @@ if plot_trilateration_spheresIntersection_circles:
     #plt.show()
 
 """
-https://rosap.ntl.bts.gov/view/dot/12134
+https://rosap.ntl.bts.gov/view/dot/12134  ==> TIME OF ARRIVAL EQUATIONS (wichtig fürs schreiben)
 https://www.th-luebeck.de/fileadmin/media_cosa/Dateien/Veroeffentlichungen/Sammlung/TR-2-2015-least-sqaures-with-ToA.pdf
 """
 

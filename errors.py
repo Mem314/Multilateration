@@ -11,17 +11,18 @@ import decimal
 from mpmath import mp
 
 num_towers, num_towers_0, num_towers_1 = [], [], []
-num = 120
-num_towers_0 += [i for i in range(4, int(num/7), 1)]
-num_towers_1 += [i for i in range(int(num/7), num, 10)]
+num = 140
+num_towers_0 += [i for i in range(4, int(num/3), 1)]
+num_towers_1 += [i for i in range(int(num/3), num, 5)]
 num_towers = num_towers_0 + num_towers_1
 print(num_towers)
-tx_square_side = 5e3
-rx_square_side = 30e3
-v = 299792458
-rec_time_noise_stdd = 10e-9
 
-precision = 9
+field_area = 1500  # Area of the field in square meters
+rx_square_side = np.sqrt(field_area)  # Length of the side of a square field
+v = 299792458
+receive_time_noise = 1e-9
+precision = 9  # max precision 15, because tx can only be presented with 15 float-point
+
 
 tx = (np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.longdouble(rx_square_side)
 formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
@@ -88,69 +89,43 @@ for x in num_towers:
         solutions = sy.nsolve(system, (x, y, z), initial_solution, maxsteps=10000, verify=False, rational=False,
                               prec=precision)
 
-        positions = Trilateration_3D(towers, distances)
-
-        positions_array = np.array(positions)
-        # Check if z coordinate is negative and if so, make it positive
-        if (positions_array[:, 2] < 0).any():
-            positions_array[:, 2] = np.abs(positions_array[:, 2])
-
-        def format_positions(posi, decimal_places):
-            formatted_values = [("[{}]".format(", ".join(["{:.{}f}".format(x, decimal_places) for x in pos.tolist()])))
-                                for pos in posi]
-            return formatted_values
-
-        formatted_positions = format_positions(positions_array, decimal_places=precision)
-        mean_position = np.mean(positions_array, axis=0)
-
         # Calculate the average error
         original_locations = np.array(tx)
         sy_locations = np.array(solutions)
-        sy_locations = sy_locations.reshape(mean_position.shape)
         absolute_difference_sy = np.abs(original_locations - sy_locations)
-        absolute_difference_tri = np.abs(original_locations - mean_position)
         average_error_sy = np.mean(absolute_difference_sy)
-        average_error_tri = np.mean(absolute_difference_tri)
 
-        return [average_error_sy, average_error_tri]
-
+        return [average_error_sy]
 
     errors = solveEquations(precision=precision)
     error_sy.append(errors[0])
-    error_tri.append(errors[1])
 
 
 def exponential_model(x, a, b, c):
     return a * np.power(x, b) + c
-def linear_model(x, a, b):
-    return a * x + b
+
 
 # Convert the error lists to numpy arrays
 error_sy = np.array(error_sy)
-error_tri = np.array(error_tri)
 
 # Fit the data using the custom exponential model with weights
-params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, method='trf', loss='cauchy')
-params_tri, _ = curve_fit(linear_model, num_towers, error_tri, method='trf', loss='arctan')
+#params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=10000, method='trf', loss='cauchy')
+params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, method='lm')
 
 # Generate x-values for the plot
-x = np.linspace(min(num_towers), max(num_towers), 80)
+x = np.linspace(min(num_towers), max(num_towers), 100)
 
 # Compute the fitted curve using the optimized parameters
 fit_curve_sy = exponential_model(x, params_sy[0], params_sy[1], params_sy[2])
-fit_curve_tri = linear_model(x, params_tri[0], params_tri[1])
-
 
 # Plot the original data and the fitted curve
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 8))
-ax1.scatter(num_towers, error_sy, label='error_sy')
-ax2.scatter(num_towers, error_tri, label='error_tri')
-ax1.plot(x, fit_curve_sy, color='red', label='Fitted Curve (SY)')
-ax2.plot(x, fit_curve_tri, color='blue', label='Fitted Curve (Tri)')
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.scatter(num_towers, error_sy, label='error_sy')
+ax.plot(x, fit_curve_sy, color='red', label='Fitted Curve (SY)')
 plt.xlabel('Number of Towers')
 plt.ylabel('Error')
-ax1.legend()
-ax2.legend()
+ax.set_yscale('linear')
+ax.legend()
 plt.show()
 
 """
