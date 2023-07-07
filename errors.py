@@ -11,9 +11,9 @@ import decimal
 from mpmath import mp
 
 num_towers, num_towers_0, num_towers_1 = [], [], []
-num = 140
-num_towers_0 += [i for i in range(4, int(num/3), 1)]
-num_towers_1 += [i for i in range(int(num/3), num, 5)]
+num = 120
+num_towers_0 += [i for i in range(4, int(num/8), 1)]
+num_towers_1 += [i for i in range(int(num/8), num, 3)]
 num_towers = num_towers_0 + num_towers_1
 print(num_towers)
 
@@ -21,15 +21,14 @@ field_area = 1500  # Area of the field in square meters
 rx_square_side = np.sqrt(field_area)  # Length of the side of a square field
 v = 299792458
 receive_time_noise = 1e-9
-precision = 9  # max precision 15, because tx can only be presented with 15 float-point
+precision = 12  # max precision 15, because tx can only be presented with 15 float-point
 
-
-tx = (np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.longdouble(rx_square_side)
+tx = (np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.sqrt(field_area)
 formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
 formatted_string_tx = ", ".join(formatted_values_tx)
 print("The locations of tx is:", formatted_string_tx)
 
-error_sy, error_tri = [], []
+error_sy = []
 for x in num_towers:
     towers_0 = (np.random.rand(x, 3).astype(np.longdouble) - 0.5) * np.longdouble(rx_square_side)
     towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
@@ -91,14 +90,17 @@ for x in num_towers:
 
         # Calculate the average error
         original_locations = np.array(tx)
-        sy_locations = np.array(solutions)
-        absolute_difference_sy = np.abs(original_locations - sy_locations)
+        solutions_array = np.array(solutions)
+        reshaped_original_locations = np.reshape(original_locations, (3, 1))
+        absolute_difference_sy = np.abs(solutions_array - reshaped_original_locations)
         average_error_sy = np.mean(absolute_difference_sy)
+        #print("sy_locations: {}".format(reshaped_original_locations))
+        #print("absolute_difference_sy: {}".format(absolute_difference_sy))
 
         return [average_error_sy]
 
-    errors = solveEquations(precision=precision)
-    error_sy.append(errors[0])
+    error_sy.append(solveEquations(precision=precision)[0])
+print(error_sy)
 
 
 def exponential_model(x, a, b, c):
@@ -109,22 +111,26 @@ def exponential_model(x, a, b, c):
 error_sy = np.array(error_sy)
 
 # Fit the data using the custom exponential model with weights
-#params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=10000, method='trf', loss='cauchy')
-params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, method='lm')
+params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=10000, method='trf')
+#params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, method='lm')
 
 # Generate x-values for the plot
-x = np.linspace(min(num_towers), max(num_towers), 100)
+x = np.linspace(min(num_towers), max(num_towers), towers.shape[0])
 
 # Compute the fitted curve using the optimized parameters
 fit_curve_sy = exponential_model(x, params_sy[0], params_sy[1], params_sy[2])
 
 # Plot the original data and the fitted curve
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.scatter(num_towers, error_sy, label='error_sy')
+fig, ax = plt.subplots(figsize=(12, 8))
+ax.grid(which='major', color='#DDDDDD', linewidth=0.8)
+ax.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+ax.minorticks_on()
+ax.scatter(num_towers, error_sy, label='error_sy', s=10, c='k', marker='o')
 ax.plot(x, fit_curve_sy, color='red', label='Fitted Curve (SY)')
 plt.xlabel('Number of Towers')
 plt.ylabel('Error')
-ax.set_yscale('linear')
+#ylim2 = 8e-11  # Set the desired y-axis limits for the fitted curve
+#ax.set_ylim(bottom=-ylim2, top=ylim2)
 ax.legend()
 plt.show()
 
