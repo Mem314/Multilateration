@@ -11,7 +11,7 @@ import decimal
 from mpmath import mp
 
 num_towers, num_towers_0, num_towers_1 = [], [], []
-num = 120
+num = 70
 num_towers_0 += [i for i in range(4, int(num/8), 1)]
 num_towers_1 += [i for i in range(int(num/8), num, 3)]
 num_towers = num_towers_0 + num_towers_1
@@ -100,39 +100,47 @@ for x in num_towers:
         return [average_error_sy]
 
     error_sy.append(solveEquations(precision=precision)[0])
-print(error_sy)
-
+#print(error_sy)
+#error_sy = [7.84873735737897279e-12, 1.23962108662436140e-11, 3.58914906620442601e-11, 2.39841266783345312e-11,
+#            8.90926503578637341e-12, 1.46429921862636000e-11, 9.84571517197163626e-12, 6.30595742001175778e-12,
+#            7.67019947267115014e-12, 2.26659265719723428e-12, 4.69191186192504291e-12, 2.24018669644591532e-12,
+#            8.90926503578637341e-12, 8.57969417444407837e-12, 1.22176729815357913e-11, 7.24240755619702063e-12,
+#            7.39399000649250867e-12, 6.33236338076307674e-12, 7.36703457208017406e-12, 6.60912232060273386e-12,
+#            8.30293523460442125e-12, 6.24843052010141490e-12, 5.11970377839917242e-12, 8.17830821872126782e-12,
+#            5.39646271823882954e-12]
 
 def exponential_model(x, a, b, c):
-    return a * np.power(x, b) + c
+    return a * np.exp(-b * x) + c
 
 
 # Convert the error lists to numpy arrays
 error_sy = np.array(error_sy)
 
 # Fit the data using the custom exponential model with weights
-params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=10000, method='trf')
-#params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, method='lm')
+#params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=10000, method='trf', loss='huber')
+params_sy, _ = curve_fit(exponential_model, num_towers, error_sy, maxfev=10000, method='lm', ftol=1e-10, xtol=1e-12)
+
 
 # Generate x-values for the plot
-x = np.linspace(min(num_towers), max(num_towers), towers.shape[0])
+x = np.linspace(min(num_towers), max(num_towers), 100)
 
 # Compute the fitted curve using the optimized parameters
 fit_curve_sy = exponential_model(x, params_sy[0], params_sy[1], params_sy[2])
 
 # Plot the original data and the fitted curve
 fig, ax = plt.subplots(figsize=(12, 8))
-ax.grid(which='major', color='#DDDDDD', linewidth=0.8)
-ax.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+ax.grid(which='major', color='#DDDDDD', linewidth=0.8, zorder=5)
+ax.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5, zorder=5)
 ax.minorticks_on()
-ax.scatter(num_towers, error_sy, label='error_sy', s=10, c='k', marker='o')
+ax.scatter(num_towers, error_sy, label='error_sy', s=10, c='k', marker='o', zorder=10)
 ax.plot(x, fit_curve_sy, color='red', label='Fitted Curve (SY)')
 plt.xlabel('Number of Towers')
 plt.ylabel('Error')
-#ylim2 = 8e-11  # Set the desired y-axis limits for the fitted curve
+#ylim2 = 5e-11 # Set the desired y-axis limits for the fitted curve
 #ax.set_ylim(bottom=-ylim2, top=ylim2)
 ax.legend()
 plt.show()
+
 
 """
 # Fit the data using spline interpolation
