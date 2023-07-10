@@ -10,8 +10,10 @@ from sklearn.base import BaseEstimator
 import decimal
 from mpmath import mp
 
+
+
 num_towers, num_towers_0, num_towers_1 = [], [], []
-num = 190
+num = 120
 num_towers = [i for i in range(4, num+1, 1)]
 print(num_towers)
 
@@ -38,13 +40,13 @@ for x in num_towers:
 
     distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
                           for x in towers_x], dtype=np.longdouble)
-    distances += np.random.normal(loc=0, scale=receive_time_noise,
-                                 size=x)
+    #distances += np.random.normal(loc=0, scale=receive_time_noise,
+    #                             size=x)
 
     rec_times = distances / v
     # Add noise to receive times
-    rec_times += np.random.normal(loc=0, scale=receive_time_noise,
-                                  size=x)
+    #rec_times += np.random.normal(loc=0, scale=receive_time_noise,
+    #                              size=x)
 
     # coordinates of the towers and their radii.
     x0, y0, z0 = [], [], []

@@ -88,9 +88,9 @@ for i in range(towers.shape[0]):
 fig = plt.figure(figsize=(14, 8))
 ax = fig.add_subplot(projection='3d')
 max_width = rx_square_side / 2
-ax.set_zlim((max_width * -2, max_width * 2))
-ax.set_ylim((max_width * -2, max_width * 2))
-ax.set_xlim((max_width * -2, max_width * 2))
+ax.set_zlim((max_width * -3, max_width * 3))
+ax.set_ylim((max_width * -3, max_width * 3))
+ax.set_xlim((max_width * -3, max_width * 3))
 ax.axis('off')
 plt.tight_layout(pad=0.05)
 ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
@@ -231,7 +231,7 @@ if plot_trilateration_spheresIntersection_circles:
         print("Average error sy.nsolve:", average_error_sy)
         print("Average error Trilatation:", average_error_tri)
         return [average_error_sy, average_error_tri]
-    solveEquations()
+    #solveEquations()
 
 
     def solveEquations_Linearisation():
@@ -352,7 +352,7 @@ if plot_trilateration_spheresIntersection_circles:
                 array_1d = np.array(Zahl)
                 coordinats_0 = array_2d + array_1d[:, np.newaxis]
                 plot_circle_0 = ax.plot(
-                    coordinats_0[0], coordinats_0[1], coordinats_0[2], color='g')
+                    coordinats_0[0], coordinats_0[1], coordinats_0[2], color='r')
 
             for j in [y for y in range(i, towers.shape[0]) if y != first_tower and y != i]:
                 if np.sqrt((dx[j] - dx[i]) ** 2 + (dy[j] - dy[i]) ** 2 + (dz[j] - dz[i]) ** 2) <= (disti[j] + disti[i]):
@@ -371,7 +371,7 @@ if plot_trilateration_spheresIntersection_circles:
                     array_1d = np.array(Zahl)
                     coordinats = array_2d + array_1d[:, np.newaxis]
                     plot_circle = ax.plot(
-                        coordinats[0], coordinats[1], coordinats[2], color='b')
+                        coordinats[0], coordinats[1], coordinats[2], color='r')
                 else:
                     plot_circle = []
             else:
@@ -401,9 +401,9 @@ if plot_trilateration_spheresIntersection_circles:
             TDOA.append(tdoa)
             TDOA_dist.append(v * tdoa)
 
-    n_frames = 40
-    max_seconds = 3e-7
-    max_d = 30
+    n_frames =120
+    max_seconds = 1.1 * max(rec_times)
+    max_d = 4 * max(distances)
 
     def animate1(i):
         global t_rec, tower_text, v_vec, v_ann
@@ -436,20 +436,27 @@ if plot_trilateration_spheresIntersection_circles:
         ax.collections.clear()
 
         max_width = rx_square_side / 2
-        ax.set_zlim((max_width * -2, max_width * 2))
-        ax.set_ylim((max_width * -2, max_width * 2))
-        ax.set_xlim((max_width * -2, max_width * 2))
+        ax.set_zlim((max_width * -3, max_width * 3))
+        ax.set_ylim((max_width * -3, max_width * 3))
+        ax.set_xlim((max_width * -3, max_width * 3))
         ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
         ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
         ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
         ax.axis('off')
-        ax.view_init(elev=45, azim=i/2)
+
+        ax.view_init(elev=40, azim=i/2)
+
         plot_lines()
         plot_towers()
 
         d = i / n_frames * max_d
         first_tower = int(np.argmin(rec_times))
-        d0 = [np.clip(d, d, distances[first_tower])]
+        last_tower = int(np.argmax(rec_times))
+        TDOA_0 = v * (rec_times[last_tower] - rec_times[first_tower])
+        TDOA_2 = v * (rec_times[last_tower] - rec_times[first_tower])
+        d0 = [np.clip(d, d - TDOA_0, distances[first_tower])]
+        d2 = [np.clip(d, d + TDOA_2, distances[last_tower])]
+
 
         circles(radius_0=d0, radius=d)
         kugel_0 = Kugeln(radius=d0, x=x0[first_tower], y=y0[first_tower], z=z0[first_tower])
@@ -460,6 +467,8 @@ if plot_trilateration_spheresIntersection_circles:
             kugel_i = Kugeln(radius=d1, x=x0[j], y=y0[j], z=z0[j])
             kugel_i.coordinaten()
 
+
+
             print("\r d = : " + str(d), end="\n")
             #print("\r Tower 0 radius r0 = : " + str(d0), end="\n")
             #print("\r Tower 1 radius r1 = : " + str(d1 + TDOA_dist1), end="\n")
@@ -468,10 +477,10 @@ if plot_trilateration_spheresIntersection_circles:
 
 
 
-    #anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
+    anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    ##anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=60)
-    #plt.show()
+    #anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=60)
+    plt.show()
 
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(projection='3d')
@@ -479,10 +488,10 @@ if plot_trilateration_spheresIntersection_circles:
     ax.axis('off')
 
 
-    #anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
+    anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    ##anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=60)
-    #plt.show()
+    anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=30)
+    plt.show()
 
 """
 https://rosap.ntl.bts.gov/view/dot/12134  ==> TIME OF ARRIVAL EQUATIONS (wichtig fürs schreiben)
