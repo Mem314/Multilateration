@@ -11,10 +11,8 @@ import decimal
 from mpmath import mp
 
 num_towers, num_towers_0, num_towers_1 = [], [], []
-num = 70
-num_towers_0 += [i for i in range(4, int(num/8), 1)]
-num_towers_1 += [i for i in range(int(num/8), num, 3)]
-num_towers = num_towers_0 + num_towers_1
+num = 190
+num_towers = [i for i in range(4, num+1, 1)]
 print(num_towers)
 
 field_area = 1500  # Area of the field in square meters
@@ -22,26 +20,31 @@ rx_square_side = np.sqrt(field_area)  # Length of the side of a square field
 v = 299792458
 receive_time_noise = 1e-9
 precision = 12  # max precision 15, because tx can only be presented with 15 float-point
+np.set_printoptions(precision=precision)
 
 tx = (np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.sqrt(field_area)
 formatted_values_tx = [("{:.{}f}".format(x, precision)) for x in tx]
 formatted_string_tx = ", ".join(formatted_values_tx)
 print("The locations of tx is:", formatted_string_tx)
 
+
+
+towers_0 = (np.random.rand(max(num_towers), 3).astype(np.longdouble) - 0.5) * np.longdouble(rx_square_side)
+towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
+
 error_sy = []
 for x in num_towers:
-    towers_0 = (np.random.rand(x, 3).astype(np.longdouble) - 0.5) * np.longdouble(rx_square_side)
-    towers = towers_0 * np.array([1, 1, 0], dtype=np.longdouble)
+    towers_x = towers[:x]
 
     distances = np.array([np.sqrt((x[0] - tx[0]) ** 2 + (x[1] - tx[1]) ** 2 + (x[2] - tx[2]) ** 2)
-                          for x in towers], dtype=np.longdouble)
-    #distances += np.random.normal(loc=0, scale=rec_time_noise_stdd,
-    #                              size=x)
+                          for x in towers_x], dtype=np.longdouble)
+    distances += np.random.normal(loc=0, scale=receive_time_noise,
+                                 size=x)
 
     rec_times = distances / v
     # Add noise to receive times
-    #rec_times += np.random.normal(loc=0, scale=rec_time_noise_stdd,
-    #                              size=x)
+    rec_times += np.random.normal(loc=0, scale=receive_time_noise,
+                                  size=x)
 
     # coordinates of the towers and their radii.
     x0, y0, z0 = [], [], []
@@ -49,10 +52,10 @@ for x in num_towers:
     # Set decimal precision
     decimal.getcontext().prec = precision
 
-    for i in range(towers.shape[0]):
-        x0.append(decimal.Decimal(str(towers[i][0])))
-        y0.append(decimal.Decimal(str(towers[i][1])))
-        z0.append(decimal.Decimal(str(towers[i][2])))
+    for i in range(towers_x.shape[0]):
+        x0.append(decimal.Decimal(str(towers_x[i][0])))
+        y0.append(decimal.Decimal(str(towers_x[i][1])))
+        z0.append(decimal.Decimal(str(towers_x[i][2])))
 
 
     def solveEquations(precision):
@@ -66,12 +69,12 @@ for x in num_towers:
         eq0 = sy.Eq((x - x0[first_tower]) ** 2 + (y - y0[first_tower]) ** 2 +
                     (z - z0[first_tower]) ** 2, distances[first_tower] ** 2)
         equations.append(eq0)
-        for i in [x for x in range(towers.shape[0]) if x != first_tower]:
+        for i in [x for x in range(towers_x.shape[0]) if x != first_tower]:
             dx.append(x0[i] - x0[first_tower])
             dy.append(y0[i] - y0[first_tower])
             dz.append(z0[i] - z0[first_tower])
             disti.append(distances[i])
-        for i in range(towers.shape[0] - 1):
+        for i in range(towers_x.shape[0] - 1):
             eq = sy.Eq((x - dx[i] - x0[first_tower]) ** 2 + (y - dy[i] - y0[first_tower]) ** 2 +
                        (z - dz[i] - z0[first_tower]) ** 2, disti[i] ** 2)
             equations.append(eq)
@@ -100,7 +103,7 @@ for x in num_towers:
         return [average_error_sy]
 
     error_sy.append(solveEquations(precision=precision)[0])
-#print(error_sy)
+print(error_sy)
 #error_sy = [7.84873735737897279e-12, 1.23962108662436140e-11, 3.58914906620442601e-11, 2.39841266783345312e-11,
 #            8.90926503578637341e-12, 1.46429921862636000e-11, 9.84571517197163626e-12, 6.30595742001175778e-12,
 #            7.67019947267115014e-12, 2.26659265719723428e-12, 4.69191186192504291e-12, 2.24018669644591532e-12,
