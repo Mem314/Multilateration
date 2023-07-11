@@ -93,10 +93,10 @@ ax.set_ylim((max_width * -3, max_width * 3))
 ax.set_xlim((max_width * -3, max_width * 3))
 ax.axis('off')
 plt.tight_layout(pad=0.05)
-ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
-ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
-ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
-
+ax.plot3D((0, 0), (0, 0), (-max_width * 5, max_width * 5), 'b', label='z-axis')
+ax.plot3D((-max_width * 5, max_width * 5), (0, 0), (0, 0), 'r', label='x-axis')
+ax.plot3D((0, 0), (-max_width * 5, max_width * 5), (0, 0), 'k', label='y-axis')
+ax.legend()
 
 if plot_trilateration_spheresIntersection_circles:
 
@@ -140,8 +140,8 @@ if plot_trilateration_spheresIntersection_circles:
             Y = self.y + self.radius * np.sin(phi) * np.sin(theta1)
             Z = self.z + self.radius * np.cos(phi)
             plot = ax.plot_surface(
-                X, Y, Z, rstride=2, cstride=2, cmap=cm.cividis,
-                linewidth=0, antialiased=False, alpha=0.2)
+                X, Y, Z, rstride=1, cstride=5, cmap=cm.winter,
+                linewidth=0, antialiased=False, alpha=0.15)
             return plot
 
 
@@ -439,9 +439,10 @@ if plot_trilateration_spheresIntersection_circles:
         ax.set_zlim((max_width * -3, max_width * 3))
         ax.set_ylim((max_width * -3, max_width * 3))
         ax.set_xlim((max_width * -3, max_width * 3))
-        ax.plot((0, 0), (0, 0), (-max_width + 1, max_width - 1), 'b', label='z-axis')
-        ax.plot((-max_width + 1, max_width - 1), (0, 0), (0, 0), 'r', label='x-axis')
-        ax.plot((0, 0), (-max_width + 1, max_width - 1), (0, 0), 'k', label='y-axis')
+        ax.plot3D((0, 0), (0, 0), (-max_width * 5, max_width * 5), 'b', label='z-axis')
+        ax.plot3D((-max_width * 5, max_width * 5), (0, 0), (0, 0), 'r', label='x-axis')
+        ax.plot3D((0, 0), (-max_width * 5, max_width * 5), (0, 0), 'k', label='y-axis')
+        ax.legend()
         ax.axis('off')
 
         ax.view_init(elev=40, azim=i/2)
@@ -489,8 +490,8 @@ if plot_trilateration_spheresIntersection_circles:
 
 
     anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
-    ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=30)
+    anim_2.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', fps=12)
+    #anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=30)
     plt.show()
 
 """
