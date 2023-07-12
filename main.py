@@ -93,9 +93,9 @@ ax.set_ylim((max_width * -3, max_width * 3))
 ax.set_xlim((max_width * -3, max_width * 3))
 ax.axis('off')
 plt.tight_layout(pad=0.05)
-ax.plot3D((0, 0), (0, 0), (-max_width * 5, max_width * 5), 'b', label='z-axis')
-ax.plot3D((-max_width * 5, max_width * 5), (0, 0), (0, 0), 'r', label='x-axis')
-ax.plot3D((0, 0), (-max_width * 5, max_width * 5), (0, 0), 'k', label='y-axis')
+ax.plot3D((0, 0), (0, 0), (-max_width * 5, max_width * 5), 'b--', label='z-axis')
+ax.plot3D((-max_width * 5, max_width * 5), (0, 0), (0, 0), 'r--', label='x-axis')
+ax.plot3D((0, 0), (-max_width * 5, max_width * 5), (0, 0), 'k--', label='y-axis')
 ax.legend()
 
 if plot_trilateration_spheresIntersection_circles:
@@ -105,10 +105,10 @@ if plot_trilateration_spheresIntersection_circles:
             x = towers[k][0]
             y = towers[k][1]
             z = towers[k][2]
-            ax.text3D(x, y, z, 'Tower ' + str(k))
-            ax.text3D(tx[0], tx[1], tx[2], 'Tx')
-            ax.scatter3D(x, y, z, color="b", s=10)
-            ax.scatter3D(tx[0], tx[1], tx[2], color="g", s=10)
+            ax.text3D(x + 2, y + 2, z , 'Tower ' + str(k))
+            ax.text3D(tx[0] + 2, tx[1] + 2, tx[2] + 2, 'Tx')
+            ax.scatter3D(x, y, z, color="b", s=20)
+            ax.scatter3D(tx[0], tx[1], tx[2], color="k", s=30)
 
 
     def plot_lines():
@@ -439,9 +439,9 @@ if plot_trilateration_spheresIntersection_circles:
         ax.set_zlim((max_width * -3, max_width * 3))
         ax.set_ylim((max_width * -3, max_width * 3))
         ax.set_xlim((max_width * -3, max_width * 3))
-        ax.plot3D((0, 0), (0, 0), (-max_width * 5, max_width * 5), 'b', label='z-axis')
-        ax.plot3D((-max_width * 5, max_width * 5), (0, 0), (0, 0), 'r', label='x-axis')
-        ax.plot3D((0, 0), (-max_width * 5, max_width * 5), (0, 0), 'k', label='y-axis')
+        ax.plot3D((0, 0), (0, 0), (-max_width * 5, max_width * 5), 'b--', label='z-axis')
+        ax.plot3D((-max_width * 5, max_width * 5), (0, 0), (0, 0), 'r--', label='x-axis')
+        ax.plot3D((0, 0), (-max_width * 5, max_width * 5), (0, 0), 'k--', label='y-axis')
         ax.legend()
         ax.axis('off')
 
@@ -480,7 +480,7 @@ if plot_trilateration_spheresIntersection_circles:
 
     anim_1 = FuncAnimation(fig, animate1, frames=n_frames, interval=1, blit=False, repeat=False)
     ## anim.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', writer='imagemagick', fps=60)
-    #anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=60)
+    #anim_1.save('/home/mohammed/Animationen/TDOA1.gif', writer='imagemagick', fps=20)
     plt.show()
 
     fig = plt.figure(figsize=(12, 8))
@@ -490,13 +490,14 @@ if plot_trilateration_spheresIntersection_circles:
 
 
     anim_2 = FuncAnimation(fig, animate2, frames=n_frames, interval=10, blit=False, repeat=False)
-    anim_2.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', fps=12)
-    #anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=30)
+    #anim_2.save('C:/Users/Mem/Desktop/Studium/Vertiefungsmodul/Animationen/TDOA.gif', fps=12)
+    #anim_2.save('/home/mohammed/Animationen/TDOA2.gif', writer='imagemagick', fps=15)
     plt.show()
 
 """
 https://rosap.ntl.bts.gov/view/dot/12134  ==> TIME OF ARRIVAL EQUATIONS (wichtig fürs schreiben)
 https://www.th-luebeck.de/fileadmin/media_cosa/Dateien/Veroeffentlichungen/Sammlung/TR-2-2015-least-sqaures-with-ToA.pdf
+https://www.tandfonline.com/doi/epdf/10.1080/00107518108231543?needAccess=true&role=button (paper für cosmic shower)
 """
 
 """
