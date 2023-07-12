@@ -497,7 +497,7 @@ if plot_trilateration_spheresIntersection_circles:
 """
 https://rosap.ntl.bts.gov/view/dot/12134  ==> TIME OF ARRIVAL EQUATIONS (wichtig fürs schreiben)
 https://www.th-luebeck.de/fileadmin/media_cosa/Dateien/Veroeffentlichungen/Sammlung/TR-2-2015-least-sqaures-with-ToA.pdf
-https://www.tandfonline.com/doi/epdf/10.1080/00107518108231543?needAccess=true&role=button (paper für cosmic shower)
+https://www.tandfonline.com/doi/abs/10.1080/00107518108231543 (paper für cosmic shower)
 """
 
 """
