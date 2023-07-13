@@ -271,7 +271,4 @@ if __name__ == "__main__":
     text = f'a = {a_value}'
     ax.text(text_x, text_y, text, fontsize=12, ha='center')
 
-    # Table for overleaf
-
-
     plt.show()

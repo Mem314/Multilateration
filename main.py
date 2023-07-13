@@ -128,7 +128,8 @@ if plot_trilateration_spheresIntersection_circles:
     # Kugeln
     Theta, Phi = np.linspace(0, 2 * np.pi, 40), np.linspace(0, np.pi, 40)
     theta1, phi = np.meshgrid(Theta, Phi)
-
+    # Define the list of colors
+    colors = ['twilight_shifted', 'viridis', 'plasma', 'inferno']
     class Kugeln:
         def __init__(self, radius, x, y, z):
             self.radius = radius
@@ -140,7 +141,7 @@ if plot_trilateration_spheresIntersection_circles:
             Y = self.y + self.radius * np.sin(phi) * np.sin(theta1)
             Z = self.z + self.radius * np.cos(phi)
             plot = ax.plot_surface(
-                X, Y, Z, rstride=1, cstride=5, cmap=cm.winter,
+                X, Y, Z, rstride=1, cstride=5, cmap=cm.winter_r,
                 linewidth=0, antialiased=False, alpha=0.15)
             return plot
 
@@ -407,7 +408,6 @@ if plot_trilateration_spheresIntersection_circles:
 
     def animate1(i):
         global t_rec, tower_text, v_vec, v_ann
-
         t = i / n_frames * max_seconds
         Radius = v * t
 
