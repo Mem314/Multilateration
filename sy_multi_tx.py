@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sy
-from scipy.optimize import curve_fit, leastsq, minimize
+from scipy.optimize import curve_fit
 import decimal
 from mpmath import mp
 
@@ -21,9 +21,6 @@ tx = []
 for i in range(1, num_tx):
     tx += [(np.random.rand(3).astype(np.longdouble) - [0.5, 0.5, -1]) * np.sqrt(field_area)]
 print("The locations of tx is:", tx)
-
-
-
 
 
 towers_0 = (np.random.rand(max(num_towers), 3).astype(np.longdouble) - 0.5) * np.longdouble(rx_square_side)
